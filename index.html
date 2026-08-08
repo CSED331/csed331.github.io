@@ -51,12 +51,12 @@
               <span class="card-desc">Recursion vs. Dynamic Programming</span>
             </a>
 
-            <div class="menu-card disabled-card" aria-disabled="true">
+            <a class="menu-card active-card" href="sorting.html">
               <span class="card-index">02</span>
-              <span class="card-icon">G=(V,E)</span>
-              <span class="card-title">Graph Algorithms</span>
-              <span class="card-desc">BFS, DFS, shortest paths</span>
-            </div>
+              <span class="card-icon">SORT(A)</span>
+              <span class="card-title">Sorting Lab</span>
+              <span class="card-desc">Merge Sort with Divide and Conquer</span>
+            </a>
 
             <div class="menu-card disabled-card" aria-disabled="true">
               <span class="card-index">03</span>
@@ -74,8 +74,20 @@
           </div>
         </nav>
 
+        <div id="terminal-output" class="terminal-output"></div>
+
         <footer class="terminal-footer">
-          <span>guest@csed331:~$ <span class="cursor">_</span></span>
+          <div class="terminal-command">
+            <span class="terminal-prompt">guest@csed331:~$</span>
+            <input
+              id="terminal-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Terminal command"
+            >
+          </div>
+
           <span>Build 2026.08</span>
         </footer>
       </div>
@@ -84,6 +96,6 @@
     <p class="keyboard-hint">SYSTEM MESSAGE: Choose a module to begin.</p>
   </main>
 
-  <script src="script.js"></script>
+  <script src="index.js"></script>
 </body>
 </html>

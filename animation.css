@@ -324,3 +324,1415 @@
     0 8px 20px
     rgba(245, 184, 75, 0.12);
 }
+
+/* =========================================================
+   MERGE SORT INPUT
+   ========================================================= */
+
+   .sort-size-row {
+    display: grid;
+  
+    grid-template-columns:
+      90px
+      1fr;
+  
+    gap: 10px;
+  }
+  
+  
+  .sort-size-row input {
+    width: 100%;
+  
+    padding: 12px;
+  
+    color: var(--text);
+  
+    border:
+      1px solid #536887;
+  
+    border-radius: 6px;
+  
+    background:
+      #0c1321;
+  }
+  
+  
+  .sort-size-row button {
+    cursor: pointer;
+  
+    color: #07101d;
+  
+    border: 0;
+    border-radius: 6px;
+  
+    background:
+      linear-gradient(
+        135deg,
+        #8fc5ff,
+        #59a8ff
+      );
+  
+    font-weight: 800;
+  }
+  
+  
+  /* =========================================================
+     ARRAY EDITOR
+     ========================================================= */
+  
+  .sort-input-panel {
+    margin-top: 30px;
+  
+    padding: 22px;
+  
+    border:
+      1px solid
+      var(--line);
+  
+    border-radius: 9px;
+  
+    background:
+      rgba(
+        16,
+        24,
+        39,
+        0.9
+      );
+  }
+  
+  
+  .sort-array-inputs {
+    display: flex;
+  
+    flex-wrap: wrap;
+  
+    gap: 8px;
+  
+    margin-top: 18px;
+  }
+  
+  
+  .sort-input-cell-wrapper {
+    display: flex;
+  
+    flex-direction: column;
+  
+    align-items: center;
+  }
+  
+  
+  .sort-input-index {
+    margin-bottom: 5px;
+  
+    color:
+      var(--muted);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size:
+      0.72rem;
+  }
+  
+  
+  .sort-array-value {
+    width: 74px;
+    height: 58px;
+  
+    padding: 5px;
+  
+    color: var(--text);
+  
+    border: 1px solid #536887;
+    border-radius: 6px;
+  
+    background: #0c1422;
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 1.15rem;
+    font-weight: 800;
+  
+    text-align: center;
+  }
+  
+  
+  .sort-array-value:focus {
+    border-color:
+      var(--accent);
+  
+    outline:
+      2px solid
+      rgba(
+        89,
+        168,
+        255,
+        0.16
+      );
+  }
+  
+  
+  .sort-button-row {
+    display: flex;
+  
+    gap: 10px;
+  
+    margin-top: 20px;
+  }
+  
+  
+  .sort-button-row button {
+    cursor: pointer;
+  
+    padding:
+      12px
+      22px;
+  
+    border-radius: 6px;
+  
+    font-weight: 800;
+  }
+  
+  
+  .run-mergesort-button {
+    color:
+      #07101d;
+  
+    border: 0;
+  
+    background:
+      linear-gradient(
+        135deg,
+        #8fc5ff,
+        #59a8ff
+      );
+  }
+  
+  
+  .secondary-sort-button {
+    color:
+      var(--text);
+  
+    border:
+      1px solid
+      var(--line);
+  
+    background:
+      rgba(
+        255,
+        255,
+        255,
+        0.04
+      );
+  }
+  
+  
+  .sort-input-message {
+    min-height: 22px;
+  
+    margin:
+      10px
+      0
+      0;
+  
+    color:
+      var(--danger);
+  
+    font-size:
+      0.86rem;
+  }
+  
+  
+  /* =========================================================
+     SORT WINDOW
+     ========================================================= */
+  
+  .sort-code-window,
+  .sort-visualization-window {
+    margin-top: 24px;
+  }
+  
+  /* =========================================================
+     RECURSION TREE
+     ========================================================= */
+  
+  .merge-tree-container {
+    width: 100%;
+  
+    min-height: 420px;
+  
+    margin-top: 4px;
+  
+    padding:
+      24px;
+  
+    overflow-x: auto;
+  
+    border:
+      1px solid
+      var(--line-soft);
+  
+    border-radius: 7px;
+  
+    background:
+      #0c1422;
+  }
+  
+  
+  .merge-subtree {
+    display: flex;
+  
+    flex-direction: column;
+  
+    align-items: center;
+  
+    min-width: max-content;
+  }
+  
+  
+  .merge-child-row {
+    display: flex;
+  
+    justify-content: center;
+  
+    gap: 28px;
+  
+    margin-top: 32px;
+  }
+  
+  
+  .merge-node-card {
+    padding:
+      7px;
+  
+    opacity: 0;
+  
+    border:
+      1px solid
+      #536887;
+  
+    border-radius: 6px;
+  
+    background:
+      #17243a;
+  
+    transform:
+      translateY(-8px);
+  
+    transition:
+      opacity
+      250ms ease,
+      transform
+      300ms ease,
+      border-color
+      250ms ease,
+      background
+      250ms ease;
+  }
+  
+  
+  .merge-node-card.is-visible {
+    opacity: 1;
+  
+    transform:
+      translateY(0);
+  }
+  
+  
+  .merge-node-card.is-active {
+    border-color:
+      var(--accent);
+  
+    background:
+      rgba(
+        89,
+        168,
+        255,
+        0.14
+      );
+  }
+  
+  
+  .merge-node-card.is-base {
+    border-color:
+      var(--highlight);
+  
+    background:
+      rgba(
+        245,
+        184,
+        75,
+        0.12
+      );
+  }
+  
+  
+  .merge-node-card.is-merged {
+    border-color:
+      var(--success);
+  
+    background:
+      rgba(
+        99,
+        214,
+        160,
+        0.12
+      );
+  }
+  
+  
+  .merge-node-card.is-splitting {
+    border-color:
+      var(--highlight);
+  }
+  
+  
+  /* =========================================================
+     ARRAY CELLS
+     ========================================================= */
+  
+  .merge-value-row {
+    display: flex;
+  }
+  
+  
+  .merge-value-cell {
+    display: flex;
+  
+    align-items: center;
+    justify-content: center;
+  
+    min-width: 42px;
+    height: 38px;
+  
+    padding:
+      0
+      7px;
+  
+    color:
+      var(--text);
+  
+    border-top:
+      1px solid
+      #536887;
+  
+    border-bottom:
+      1px solid
+      #536887;
+  
+    border-left:
+      1px solid
+      #536887;
+  
+    background:
+      rgba(
+        20,
+        31,
+        50,
+        0.88
+      );
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size:
+      0.86rem;
+  
+    font-weight: 700;
+  
+    transition:
+      opacity
+      200ms ease,
+      background
+      200ms ease,
+      border-color
+      200ms ease;
+  }
+  
+  
+  .merge-value-cell:last-child {
+    border-right:
+      1px solid
+      #536887;
+  }
+  
+  
+/* =========================================================
+   MERGESORT INPUT
+   ========================================================= */
+
+   .sort-size-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 10px;
+  }
+  
+  
+  .sort-size-row input {
+    width: 100%;
+    padding: 12px;
+  
+    color: var(--text);
+  
+    border: 1px solid #536887;
+    border-radius: 6px;
+  
+    background: #0c1321;
+  }
+  
+  
+  .sort-size-row button {
+    cursor: pointer;
+  
+    color: #07101d;
+  
+    border: 0;
+    border-radius: 6px;
+  
+    background:
+      linear-gradient(
+        135deg,
+        #8fc5ff,
+        #59a8ff
+      );
+  
+    font-weight: 800;
+  }
+  
+  
+  /* =========================================================
+     ARRAY INPUT
+     ========================================================= */
+  
+  .sort-input-panel {
+    margin-top: 30px;
+    padding: 22px;
+  
+    border: 1px solid var(--line);
+    border-radius: 9px;
+  
+    background:
+      rgba(16, 24, 39, 0.9);
+  }
+  
+  
+  .sort-array-inputs {
+    display: flex;
+    flex-wrap: wrap;
+  
+    gap: 8px;
+  
+    margin-top: 18px;
+  }
+  
+  
+  .sort-input-cell-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  
+  .sort-input-index {
+    margin-bottom: 5px;
+  
+    color: var(--muted);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.72rem;
+  }
+  
+  
+  .sort-array-value {
+    width: 74px;
+    height: 58px;
+  
+    padding: 5px;
+  
+    color: var(--text);
+  
+    border: 1px solid #536887;
+    border-radius: 6px;
+  
+    background: #0c1422;
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 1.15rem;
+    font-weight: 800;
+  
+    text-align: center;
+  }
+  
+  
+  .sort-array-value:focus {
+    border-color: var(--accent);
+  
+    outline:
+      2px solid
+      rgba(89, 168, 255, 0.18);
+  }
+  
+  
+  /* =========================================================
+     BUTTONS
+     ========================================================= */
+  
+  .sort-button-row {
+    display: flex;
+    gap: 10px;
+  
+    margin-top: 20px;
+  }
+  
+  
+  .sort-button-row button {
+    cursor: pointer;
+  
+    padding: 12px 22px;
+  
+    border-radius: 6px;
+  
+    font-weight: 800;
+  }
+  
+  
+  .run-mergesort-button {
+    color: #07101d;
+  
+    border: 0;
+  
+    background:
+      linear-gradient(
+        135deg,
+        #8fc5ff,
+        #59a8ff
+      );
+  }
+  
+  
+  .secondary-sort-button {
+    color: var(--text);
+  
+    border: 1px solid var(--line);
+  
+    background:
+      rgba(255, 255, 255, 0.04);
+  }
+  
+  
+  .sort-input-message {
+    min-height: 22px;
+  
+    margin:
+      10px
+      0
+      0;
+  
+    color:
+      var(--danger, #ff8f9a);
+  
+    font-size:
+      0.86rem;
+  }
+  
+  
+  /* =========================================================
+     SORT WINDOWS
+     ========================================================= */
+  
+  .sort-code-window,
+  .sort-visualization-window {
+    margin-top: 24px;
+  }
+  
+  
+  .sort-visualization-window {
+    scroll-margin-top: 20px;
+  }
+  
+  
+  /* =========================================================
+     LIVE STATUS
+     ========================================================= */
+  
+  .sort-live-status {
+    display: grid;
+  
+    grid-template-columns:
+      0.8fr
+      0.6fr
+      0.8fr
+      2fr;
+  
+    gap: 10px;
+  
+    margin-bottom: 20px;
+  }
+  
+  
+  .sort-live-status > div {
+    padding: 11px 13px;
+  
+    border:
+      1px solid
+      var(--line-soft);
+  
+    border-radius: 6px;
+  
+    background:
+      rgba(255, 255, 255, 0.025);
+  }
+  
+  
+  .sort-live-status span,
+  .sort-live-status strong {
+    display: block;
+  }
+  
+  
+  .sort-live-status span {
+    color: var(--muted);
+  
+    font-size: 0.72rem;
+  
+    letter-spacing: 0.06em;
+  }
+  
+  
+  .sort-live-status strong {
+    margin-top: 5px;
+  
+    color: var(--text);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.9rem;
+  }
+  
+  
+  /* =========================================================
+     WHOLE MERGESORT DIAGRAM
+     ========================================================= */
+  
+  .merge-tree-container {
+    width: 100%;
+  
+    min-height: 520px;
+  
+    padding: 32px 24px 42px;
+  
+    overflow-x: auto;
+    overflow-y: hidden;
+  
+    border:
+      1px solid
+      var(--line-soft);
+  
+    border-radius: 7px;
+  
+    background:
+      linear-gradient(
+        rgba(121, 148, 183, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        rgba(121, 148, 183, 0.035) 1px,
+        transparent 1px
+      ),
+      #0c1422;
+  
+    background-size:
+      22px 22px;
+  
+    scrollbar-gutter: stable;
+  }
+  
+  
+  /* =========================================================
+     RECURSIVE SUBTREE
+  
+             call
+              ↓
+            split
+            /   \
+         child child
+            \   /
+            merge
+              ↓
+           result
+     ========================================================= */
+  
+  .merge-subtree {
+    position: relative;
+  
+    display: flex;
+    flex-direction: column;
+  
+    align-items: center;
+  
+    min-width: max-content;
+  }
+  
+  
+  /* =========================================================
+     CHILD ROW
+     ========================================================= */
+  
+  .merge-child-row {
+    position: relative;
+  
+    display: flex;
+  
+    align-items: flex-start;
+    justify-content: center;
+  
+    gap: 26px;
+  
+    margin-top: 6px;
+  
+    padding-top: 16px;
+  }
+  
+  
+  /*
+    split 이전에는 branch line 숨김
+  */
+  
+  .merge-child-row::before {
+    content: "";
+  
+    position: absolute;
+  
+    top: 0;
+  
+    left: 24%;
+    right: 24%;
+  
+    border-top:
+      2px dashed
+      rgba(255, 154, 154, 0.72);
+  
+    opacity: 0;
+  
+    transition:
+      opacity 300ms ease;
+  }
+  
+  
+  .merge-child-row.is-visible::before {
+    opacity: 1;
+  }
+  
+  
+  /*
+    각 child로 내려오는 짧은 vertical branch
+  */
+  
+  .merge-child-row >
+  .merge-subtree::before {
+    content: "";
+  
+    position: absolute;
+  
+    top: -16px;
+    left: 50%;
+  
+    height: 16px;
+  
+    border-left:
+      2px dashed
+      rgba(255, 154, 154, 0.72);
+  
+    opacity: 0;
+  
+    transition:
+      opacity 300ms ease;
+  }
+  
+  
+  .merge-child-row.is-visible >
+  .merge-subtree::before {
+    opacity: 1;
+  }
+  
+  
+  /* =========================================================
+     FLOW ARROWS
+     ========================================================= */
+  
+  .sort-flow {
+    display: flex;
+  
+    align-items: center;
+    justify-content: center;
+  
+    gap: 14px;
+  
+    min-height: 38px;
+  
+    opacity: 0;
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.76rem;
+    font-weight: 800;
+  
+    letter-spacing: 0.06em;
+  
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
+  }
+  
+  
+  .sort-flow.is-visible {
+    opacity: 0.75;
+  }
+  
+  
+  .sort-flow.is-active {
+    opacity: 1;
+  
+    transform:
+      scale(1.05);
+  }
+  
+  
+  .sort-flow-arrow {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  
+  
+  /* SPLIT = PPT의 red/pink 계열 */
+  
+  .split-flow {
+    color: #ff9a9a;
+  }
+  
+  
+  /* MERGE = PPT의 blue 계열 */
+  
+  .merge-flow {
+    margin-top: 10px;
+  
+    color: #8fc5ff;
+  }
+  
+  
+  .merge-flow.is-visible {
+    opacity: 0.9;
+  }
+  
+  
+  /* =========================================================
+     NODE CARD
+     ========================================================= */
+  
+  .merge-node-card {
+    position: relative;
+  
+    padding:
+      8px
+      9px
+      10px;
+  
+    opacity: 0;
+  
+    border:
+      1px solid
+      #536887;
+  
+    border-radius: 7px;
+  
+    background:
+      #17243a;
+  
+    transform:
+      translateY(-7px);
+  
+    transition:
+      opacity 300ms ease,
+      transform 340ms ease,
+      border-color 260ms ease,
+      background 260ms ease,
+      box-shadow 260ms ease;
+  }
+  
+  
+  .merge-node-card.is-visible {
+    opacity: 1;
+  
+    transform:
+      translateY(0);
+  }
+  
+  
+  /* 현재 step */
+  
+  .merge-node-card.is-active {
+    border-color:
+      var(--highlight, #f5b84b);
+  
+    box-shadow:
+      0 0 0 2px
+      rgba(245, 184, 75, 0.14);
+  }
+  
+  
+  /* 현재 split node */
+  
+  .merge-node-card.is-splitting {
+    border-color: #ff9a9a;
+  
+    background:
+      rgba(255, 154, 154, 0.10);
+  }
+  
+  
+  /* base case */
+  
+  .merge-node-card.is-base {
+    border-color:
+      var(--highlight, #f5b84b);
+  
+    background:
+      rgba(245, 184, 75, 0.10);
+  }
+  
+  
+  /* child merge source */
+  
+  .merge-node-card.is-merge-source {
+    border-color: #8fc5ff;
+  
+    box-shadow:
+      0 0 0 1px
+      rgba(143, 197, 255, 0.18);
+  }
+  
+  
+  /* 현재 merge 결과를 만들고 있는 node */
+  
+  .merge-result-card.is-merging {
+    border-color: #8fc5ff;
+  
+    background:
+      rgba(143, 197, 255, 0.08);
+  }
+  
+  
+  /* merge 완료 */
+  
+  .merge-result-card.is-merged {
+    border-color:
+      var(--success, #63d6a0);
+  
+    background:
+      rgba(99, 214, 160, 0.10);
+  }
+  
+  
+  /* =========================================================
+     NODE TEXT
+     ========================================================= */
+  
+  .merge-node-header {
+    margin-bottom: 6px;
+  
+    color: var(--muted);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.69rem;
+  
+    letter-spacing: 0.04em;
+  
+    text-align: center;
+  }
+  
+  
+  .merge-node-body {
+    display: flex;
+  
+    justify-content: center;
+  }
+  
+  
+  .merge-node-note {
+    min-height: 17px;
+  
+    margin-top: 7px;
+  
+    color:
+      var(--text-soft);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.68rem;
+  
+    text-align: center;
+  }
+  
+  
+  /* =========================================================
+     ARRAY CELLS
+     ========================================================= */
+  
+  .merge-value-row {
+    display: flex;
+  
+    align-items: center;
+  
+    width: max-content;
+  }
+  
+  
+  .merge-value-cell {
+    display: flex;
+  
+    align-items: center;
+    justify-content: center;
+  
+    min-width: 44px;
+    height: 40px;
+  
+    padding:
+      0
+      7px;
+  
+    color:
+      var(--text);
+  
+    border-top:
+      1px solid
+      #536887;
+  
+    border-bottom:
+      1px solid
+      #536887;
+  
+    border-left:
+      1px solid
+      #536887;
+  
+    background:
+      rgba(20, 31, 50, 0.90);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.9rem;
+    font-weight: 750;
+  
+    transition:
+      opacity 220ms ease,
+      color 220ms ease,
+      background 220ms ease,
+      border-color 220ms ease,
+      transform 220ms ease,
+      box-shadow 220ms ease,
+      font-size 220ms ease;
+  }
+  
+  
+  .merge-value-cell:last-child {
+    border-right:
+      1px solid
+      #536887;
+  }
+  
+  
+  /* =========================================================
+     SPLIT POINT
+  
+     [ ... ] ║ [ ... ]
+     ========================================================= */
+  
+  .merge-split-divider {
+    width: 0;
+    height: 36px;
+  
+    margin:
+      0
+      6px;
+  
+    border-left:
+      2px dashed
+      rgba(255, 154, 154, 0.48);
+  
+    transition:
+      border-color 250ms ease,
+      filter 250ms ease,
+      transform 250ms ease;
+  }
+  
+  
+  /* 현재 split 지점 */
+  
+  .merge-split-divider.is-active {
+    border-left:
+      3px solid
+      #ff9a9a;
+  
+    transform:
+      scaleY(1.18);
+  
+    filter:
+      drop-shadow(
+        0 0 5px
+        rgba(255, 154, 154, 0.6)
+      );
+  }
+  
+  
+  /* =========================================================
+     MERGE OUTPUT
+     ========================================================= */
+  
+     .merge-output-row
+     .merge-value-cell {
+       min-width: 48px;
+       height: 44px;
+     
+       padding:
+         0
+         8px;
+     
+       color: transparent;
+     
+       border-style: dashed;
+     
+       background:
+         rgba(143, 197, 255, 0.025);
+     
+       font-size: 1rem;
+       font-weight: 800;
+     }
+  
+  
+  /* 다음 값이 들어갈 위치 */
+  
+  .merge-output-row
+  .merge-value-cell.is-next-output {
+    border-color: #8fc5ff;
+  
+    background:
+      rgba(143, 197, 255, 0.12);
+  
+    box-shadow:
+      inset
+      0
+      0
+      0
+      1px
+      rgba(143, 197, 255, 0.20);
+  }
+  
+  
+  /* 값이 실제로 들어온 cell */
+  
+  .merge-output-row
+  .merge-value-cell.is-filled {
+    color: var(--text);
+  
+    border-style: solid;
+  
+    border-color:
+      var(--success, #63d6a0);
+  
+    background:
+      rgba(99, 214, 160, 0.10);
+  }
+  
+  
+  /* =========================================================
+     COMPARE
+     ========================================================= */
+  
+    .merge-value-cell.is-comparing {
+    position: relative;
+    z-index: 5;
+    
+    color: #07101d;
+    
+    border-color:
+        var(--highlight, #f5b84b);
+    
+    background:
+        var(--highlight, #f5b84b);
+    
+    font-size: 1.15rem;
+    font-weight: 900;
+    
+    transform:
+        translateY(-5px)
+        scale(1.10);
+    
+    box-shadow:
+        0 7px 18px
+        rgba(245, 184, 75, 0.28);
+    }
+  
+  /* 실제로 선택된 source */
+  
+  .merge-value-cell.is-moving-source {
+    border-color: #8fc5ff;
+  
+    background:
+      rgba(143, 197, 255, 0.18);
+  }
+  
+  
+  /*
+    이미 output으로 이동한 원소
+  */
+  
+  .merge-value-cell.is-used {
+    opacity: 0.28;
+  }
+  
+  
+  /* =========================================================
+     MOVING GHOST
+  
+     실제 cell이 child에서
+     아래쪽 merge-result node로 이동
+     ========================================================= */
+  
+    .merge-moving-cell {
+    position: fixed;
+    
+    z-index: 9999;
+    
+    pointer-events: none;
+    
+    margin: 0;
+    
+    opacity: 1;
+    
+    color: #07101d;
+    
+    border:
+        1px solid
+        #8fc5ff;
+    
+    background:
+        #8fc5ff;
+    
+    font-size: 1.15rem;
+    font-weight: 900;
+    
+    box-shadow:
+        0 5px 18px
+        rgba(143, 197, 255, 0.28);
+    
+    transition:
+        transform
+        800ms
+        cubic-bezier(
+        0.2,
+        0.75,
+        0.25,
+        1
+        );
+    }
+  
+  
+  /* =========================================================
+     PLACEHOLDER
+     ========================================================= */
+  
+  .visualization-placeholder {
+    display: flex;
+  
+    align-items: center;
+    justify-content: center;
+  
+    min-height: 220px;
+  
+    color: var(--muted);
+  
+    font-family:
+      "Cascadia Code",
+      Consolas,
+      monospace;
+  
+    font-size: 0.88rem;
+  
+    text-align: center;
+  }
+  
+  
+  /* =========================================================
+     RESPONSIVE
+     ========================================================= */
+  
+  @media (max-width: 760px) {
+  
+    .sort-live-status {
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0, 1fr)
+        );
+    }
+  
+  
+    .merge-child-row {
+      gap: 14px;
+    }
+  
+  
+    .merge-value-cell {
+      min-width: 32px;
+  
+      height: 31px;
+  
+      padding:
+        0
+        4px;
+  
+      font-size: 0.72rem;
+    }
+  
+  
+    .merge-split-divider {
+      height: 32px;
+  
+      margin:
+        0
+        4px;
+    }
+  
+  }

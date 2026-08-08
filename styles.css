@@ -410,6 +410,62 @@ p {
   font-size: 0.82rem;
 }
 
+.terminal-output {
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #9cff9c;
+
+  max-height: 220px;
+  overflow-y: auto;
+
+  margin-top: 18px;
+  white-space: pre-wrap;
+}
+
+.terminal-command {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.terminal-prompt {
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+#terminal-input {
+  flex: 1;
+  min-width: 0;
+
+  border: none;
+  outline: none;
+  background: transparent;
+
+  color: inherit;
+  font: inherit;
+
+  caret-color: currentColor;
+}
+
+/* 입력창 자동완성 등으로 배경색 생기는 것 방지 */
+#terminal-input:-webkit-autofill {
+  -webkit-text-fill-color: inherit;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.terminal-line {
+  margin-bottom: 3px;
+}
+
+.command-line {
+  color: #ffffff;
+}
+
+.error-line {
+  color: #ff7b7b;
+}
+
 .cursor {
   color: var(--highlight);
   animation: blink 0.9s steps(1) infinite;

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Sorting Algorithm | CSED331
+  </title>
+
+  <link
+    rel="icon"
+    type="image/png"
+    href="favicon.png"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="animation.css"
+  >
+</head>
+
+
+<body class="lab-page">
+
+  <div class="scanlines"></div>
+
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+
+  <header class="lab-header">
+
+    <a
+      class="back-link"
+      href="index.html"
+    >
+      ← BACK TO WORKSTATION
+    </a>
+
+    <div>
+      <strong>CSED331</strong>
+      <span>ALGORITHMS</span>
+    </div>
+
+    <span id="system-clock">
+      --:--:--
+    </span>
+
+  </header>
+
+
+  <main class="lab-shell">
+
+    <!-- ===================================================
+         INTRO
+         =================================================== -->
+
+    <section class="lab-intro">
+
+      <div>
+
+        <p class="eyebrow">
+          RECURSION
+        </p>
+
+        <h1>
+          Merge Sort
+        </h1>
+
+        <p class="lab-question">
+          How does a recursive algorithm
+          divide a problem into simpler instances
+          and combine their solutions?
+        </p>
+
+      </div>
+
+
+      <!-- ===============================================
+           SIZE CONTROL
+           =============================================== -->
+
+      <div class="control-console">
+
+        <label for="sort-size">
+          INPUT SIZE n
+        </label>
+
+        <div class="sort-size-row">
+
+          <input
+            id="sort-size"
+            type="number"
+            min="2"
+            max="16"
+            value="8"
+          >
+
+          <button
+            id="create-array-button"
+            type="button"
+          >
+            CREATE ARRAY
+          </button>
+
+        </div>
+
+        <p class="control-note">
+          Recommended: 2 ≤ n ≤ 16
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         ARRAY INPUT
+         =================================================== -->
+
+    <section class="sort-input-panel">
+
+      <div class="section-label">
+
+        <span>
+          INPUT ARRAY
+        </span>
+
+        <span>
+          Enter one number in each cell
+        </span>
+
+      </div>
+
+
+      <div
+        id="sort-array-inputs"
+        class="sort-array-inputs"
+      ></div>
+
+
+      <div class="sort-button-row">
+
+        <button
+          id="run-mergesort-button"
+          type="button"
+          class="run-mergesort-button"
+        >
+          RUN MERGESORT
+        </button>
+
+        <button
+          id="reset-sort-button"
+          type="button"
+          class="secondary-sort-button"
+        >
+          RESET
+        </button>
+
+      </div>
+
+
+      <p
+        id="sort-input-message"
+        class="sort-input-message"
+        aria-live="polite"
+      ></p>
+
+    </section>
+
+
+    <!-- ===================================================
+         PSEUDOCODE
+         =================================================== -->
+
+    <section class="algorithm-window sort-code-window">
+
+      <header class="window-titlebar">
+
+        <span>
+          MERGESORT
+        </span>
+
+        <span>
+          O(n log n)
+        </span>
+
+      </header>
+
+
+      <div class="window-body">
+
+        <div class="code-block">
+
+<pre><code>mergesort(A[1 : n])
+if n &gt; 1 then
+    m ← ⌊n / 2⌋
+    mergesort(A[1 : m])
+    mergesort(A[m + 1 : n])
+    merge(A[1 : n], m)</code></pre>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         VISUALIZATION
+         =================================================== -->
+
+    <section
+      id="sort-visualization"
+      class="algorithm-window sort-visualization-window"
+    >
+
+      <header class="window-titlebar">
+
+        <span>
+          MERGESORT EXECUTION
+        </span>
+
+      </header>
+
+
+      <div class="window-body">
+
+        <!-- -----------------------------------------------
+             RECURSION TREE
+             ----------------------------------------------- -->
+
+        <div class="section-label">
+
+          <span>
+            MERGESORT RECURSION TREE
+          </span>
+        </div>
+
+
+        <div
+          id="merge-tree-container"
+          class="merge-tree-container"
+        >
+
+          <div class="visualization-placeholder">
+            Create an array and press RUN MERGESORT.
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         ANALYSIS
+         =================================================== -->
+
+    <section class="analysis-box">
+
+      <div class="analysis-title">
+        RUNNING TIME OF MERGESORT
+      </div>
+
+      <div class="analysis-equation">
+        T(n) = 2T(n / 2) + O(n)
+      </div>
+      <div class="analysis-result">
+        T(n) = O(n log n)
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script src="sorting.js"></script>
+
+</body>
+</html>

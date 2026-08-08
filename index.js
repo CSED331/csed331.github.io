@@ -150,7 +150,7 @@ terminalInput.addEventListener("keydown", (event) => {
         );
   
         window.setTimeout(() => {
-          window.location.href = "sort.html";
+          window.location.href = "sorting.html";
         }, 1000);
   
       }

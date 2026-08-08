@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CSED331 Fibonacci recursion and dynamic programming visualizer">
+  <title>Fibonacci Lab | CSED331</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <link rel="stylesheet" href="styles.css">
+  <!-- 기존 styles.css 뒤에 두어 애니메이션 스타일이 우선 적용되게 합니다. -->
+  <link rel="stylesheet" href="animation.css">
+</head>
+<body class="lab-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="lab-header">
+    <a class="back-link" href="index.html">← RETURN TO MAIN</a>
+    <div>
+      <span>CSED331 / MODULE 01</span>
+      <strong>FIBONACCI LAB</strong>
+    </div>
+    <span id="system-clock"></span>
+  </header>
+
+  <main class="lab-shell">
+
+    <!-- =====================================================
+         INTRO
+         ===================================================== -->
+    <section class="lab-intro">
+  
+      <div>
+        <p class="eyebrow">COMPUTATIONAL EFFICIENCY</p>
+  
+        <h1>
+          Fibonacci Numbers<br>
+          FIB1 vs. FIB2
+        </h1>
+  
+        <p class="lab-question">
+          How many basic operations do we need to compute
+          F<sub>n</sub>?
+        </p>
+      </div>
+  
+  
+      <div class="control-console">
+        <label for="fib-input">
+          INPUT n (0 ≤ n ≤ 20)
+        </label>
+        <div class="input-row fib-run-row">
+          <input
+            id="fib-input"
+            type="number"
+            min="0"
+            max="20"
+            value="7"
+          >
+          <button
+            id="run-fib1-button"
+            type="button"
+            class="run-fib1-button"
+          >
+            RUN FIB1
+          </button>
+          <button
+            id="run-fib2-button"
+            type="button"
+            class="run-fib2-button"
+          >
+            RUN FIB2
+          </button>
+        </div>
+      </div>
+  
+    </section>
+  
+  
+  
+    <!-- =====================================================
+         SUMMARY
+         ===================================================== -->
+    <section
+      class="summary-strip"
+      aria-live="polite"
+    >
+  
+      <div>
+        <span>F<sub>n</sub></span>
+        <strong id="result-value">
+          13
+        </strong>
+      </div>
+  
+  
+      <div>
+        <span>FIB1 ADDITIONS</span>
+        <strong id="fib1-additions">
+          20
+        </strong>
+      </div>
+  
+  
+      <div>
+        <span>FIB2 ADDITIONS</span>
+        <strong id="fib2-additions">
+          6
+        </strong>
+      </div>
+  
+  
+      <div>
+        <span>FIB1 TIME</span>
+        <strong>
+          Θ(1.6<sup>n</sup>)
+        </strong>
+      </div>
+  
+  
+      <div>
+        <span>FIB2 TIME</span>
+        <strong>
+          O(n)
+        </strong>
+      </div>
+  
+    </section>
+  
+  
+  
+    <!-- =====================================================
+         FIB1
+         ===================================================== -->
+    <section class="comparison-grid algorithm-stack">
+  
+      <article class="algorithm-window fib1-window">
+  
+        <header class="window-titlebar">
+          <span>FIB1 — RECURSION</span>
+          <span>Θ(1.6ⁿ)</span>
+        </header>
+  
+  
+        <div class="window-body">
+  
+          <!-- PPT와 동일한 FIB1 pseudocode -->
+          <div
+            class="code-block"
+            aria-label="FIB1 pseudocode"
+          >
+  <pre><code>FIB1(n)
+  if n = 0 then
+      return 0
+  else if n = 1 then
+      return 1
+  return FIB1(n − 1) + FIB1(n − 2)</code></pre>
+          </div>
+  
+  
+          <div class="section-label">
+  
+            <span>
+              FIB1 CALL TREE
+            </span>
+  
+            <span>
+              Total function calls:
+              <strong id="fib1-call-count">
+                41
+              </strong>
+            </span>
+  
+          </div>
+  
+  
+          <div
+            id="tree-container"
+            class="tree-container"
+            aria-label="FIB1 recursive call tree"
+            aria-live="polite"
+          ></div>
+  
+  
+          <!-- FIB1 running-time analysis -->
+          <div class="analysis-box fib1-analysis">
+  
+            <div class="analysis-title">
+              RUNNING TIME OF FIB1
+            </div>
+  
+  
+            <div class="analysis-equation">
+              T(n) =
+              T(n − 1) +
+              T(n − 2) +
+              O(1)
+            </div>
+  
+  
+            <p>
+              The recurrence grows as fast as the
+              Fibonacci numbers.
+            </p>
+  
+  
+            <div class="analysis-result">
+              T(n) ≈ Θ(1.6<sup>n</sup>)
+            </div>
+  
+          </div>
+  
+        </div>
+  
+      </article>
+  
+  
+  
+      <!-- ===================================================
+           FIB2
+           =================================================== -->
+  
+      <article class="algorithm-window fib2-window">
+  
+        <header class="window-titlebar">
+          <span>FIB2 — DYNAMIC PROGRAMMING</span>
+          <span>O(n)</span>
+        </header>
+  
+  
+        <div class="window-body">
+  
+          <!-- PPT와 동일한 FIB2 pseudocode -->
+          <div
+            class="code-block"
+            aria-label="FIB2 pseudocode"
+          >
+  <pre><code>FIB2(n)
+  if n = 0 then
+      return 0
+  create an array f[0, ... , n]
+  f[0] = 0, f[1] = 1
+  for i = 2, ... , n do
+      f[i] = f[i − 1] + f[i − 2]
+  return f[n]</code></pre>
+          </div>
+  
+  
+          <div class="section-label">
+  
+            <span>
+              FIB2 ARRAY BUILD
+            </span>
+  
+            <span>
+              Each f[i] is computed once
+            </span>
+  
+          </div>
+  
+  
+          <!-- JS에서 배열을 가로로 생성 -->
+          <div
+            id="dp-container"
+            class="dp-container fib2-container"
+            aria-label="FIB2 dynamic programming array"
+            aria-live="polite"
+          ></div>
+  
+  
+          <!-- FIB2 running-time analysis -->
+          <div class="analysis-box fib2-analysis">
+  
+            <div class="analysis-title">
+              RUNNING TIME OF FIB2
+            </div>
+  
+  
+            <div class="fib2-analysis-grid">
+  
+              <div>
+                <span>ADDITIONS</span>
+                <strong>O(n)</strong>
+              </div>
+  
+              <div>
+                <span>STORED INTEGERS</span>
+                <strong>O(n)</strong>
+              </div>
+  
+            </div>
+  
+  
+            <div class="analysis-result">
+              T(n) = O(n)
+            </div>
+  
+          </div>
+  
+        </div>
+  
+      </article>
+  
+    </section>
+  
+  
+  
+    <!-- =====================================================
+         OBSERVATION
+         ===================================================== -->
+  
+    <section class="complexity-panel">
+  
+      <div class="observation-header">
+  
+        <span class="complexity-tag">
+          OBSERVATION
+        </span>
+  
+        <h2>
+          Why is FIB2 so much more efficient?
+        </h2>
+  
+      </div>
+  
+  
+      <div class="call-comparison">
+  
+        <!-- FIB1 -->
+        <div class="call-card fib1-card">
+  
+          <span class="call-type">
+            FIB1
+          </span>
+  
+  
+          <strong
+            class="call-number"
+            id="observation-fib1-additions"
+          >
+            20
+          </strong>
+  
+  
+          <span class="call-unit">
+            addition operations
+          </span>
+  
+  
+          <p class="observation-description">
+            The same subproblems are
+            computed again and again.
+          </p>
+  
+  
+          <span class="call-complexity">
+            T(n) ≈
+            <strong>
+              Θ(1.6<sup>n</sup>)
+            </strong>
+          </span>
+  
+        </div>
+  
+  
+        <div class="comparison-vs">
+          VS
+        </div>
+  
+  
+        <!-- FIB2 -->
+        <div class="call-card fib2-card">
+  
+          <span class="call-type">
+            FIB2
+          </span>
+  
+  
+          <strong
+            class="call-number"
+            id="observation-fib2-additions"
+          >
+            6
+          </strong>
+  
+  
+          <span class="call-unit">
+            addition operations
+          </span>
+  
+  
+          <p class="observation-description">
+            Each f[i] is computed once
+            and stored for later use.
+          </p>
+  
+  
+          <span class="call-complexity">
+            T(n) =
+            <strong>
+              O(n)
+            </strong>
+          </span>
+  
+        </div>
+  
+      </div>
+  
+    </section>
+  
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

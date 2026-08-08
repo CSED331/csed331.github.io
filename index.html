@@ -3,10 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2026-2 CSED331 class</title>
+  <meta name="description" content="2026-2 CSED331 Algorithms course website">
+  <title>CSED331 | Algorithms</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <h1>Welcome!</h1>
-  <p>Algorithm class</p>
+<body class="home-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <main class="desktop-shell">
+    <header class="system-bar">
+      <div class="system-id">
+        <span class="status-light"></span>
+        POSTECH::CSED331
+      </div>
+      <div class="system-meta">
+        <span>SEMESTER 2026-2</span>
+        <span id="system-clock" aria-label="현재 시각"></span>
+      </div>
+    </header>
+
+    <section class="monitor">
+      <div class="monitor-top">
+        <span>ALGORITHM WORKSTATION</span>
+      </div>
+
+      <div class="screen">
+        <section class="hero-terminal" aria-labelledby="course-title">
+          <p class="boot-line">booting course environment...</p>
+          <p class="boot-line delay-1">loading graph, recursion, greedy, dynamic_programming...</p>
+          <p class="boot-line delay-2">status: <strong>READY</strong></p>
+
+          <div class="prompt-title">
+            <span class="prompt">&gt;</span>
+            <div>
+              <p class="eyebrow">2026 FALL SEMESTER</p>
+              <h1 id="course-title">CSED331<br>ALGORITHMS</h1>
+            </div>
+          </div>
+        </section>
+
+          <div class="menu-grid">
+            <a class="menu-card active-card" href="fibonacci.html">
+              <span class="card-index">01</span>
+              <span class="card-icon">FIB(n)</span>
+              <span class="card-title">Fibonacci Lab</span>
+              <span class="card-desc">Recursion vs. Dynamic Programming</span>
+            </a>
+
+            <div class="menu-card disabled-card" aria-disabled="true">
+              <span class="card-index">02</span>
+              <span class="card-icon">G=(V,E)</span>
+              <span class="card-title">Graph Algorithms</span>
+              <span class="card-desc">BFS, DFS, shortest paths</span>
+            </div>
+
+            <div class="menu-card disabled-card" aria-disabled="true">
+              <span class="card-index">03</span>
+              <span class="card-icon">DP[i]</span>
+              <span class="card-title">Dynamic Programming</span>
+              <span class="card-desc">States, transitions, reconstruction</span>
+            </div>
+
+            <div class="menu-card disabled-card" aria-disabled="true">
+              <span class="card-index">04</span>
+              <span class="card-icon">O(n)</span>
+              <span class="card-title">Complexity Notes</span>
+              <span class="card-desc">Asymptotic analysis and proofs</span>
+            </div>
+          </div>
+        </nav>
+
+        <footer class="terminal-footer">
+          <span>guest@csed331:~$ <span class="cursor">_</span></span>
+          <span>Build 2026.08</span>
+        </footer>
+      </div>
+    </section>
+
+    <p class="keyboard-hint">SYSTEM MESSAGE: Choose a module to begin.</p>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>

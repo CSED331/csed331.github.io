@@ -13,6 +13,7 @@ ls              List available modules
 cd <module>     Enter a module
 fib             Fibonacci easter egg
 sort            Sorting easter egg
+dijkstra        Dijkstra easter egg
 hello           Say hello
 about           About this course
 clear           Clear terminal
@@ -70,6 +71,11 @@ Dynamic Programming is faster.
 sort: () => `
 Merge Sort: O(n log n) ...
 How about trying Quick Sort?
+`,
+
+dijkstra: () => `
+How can we find the shortest path in a graph?
+What if we have negative edge weights?
 `,
 
 clear: () => {
@@ -151,6 +157,21 @@ terminalInput.addEventListener("keydown", (event) => {
   
         window.setTimeout(() => {
           window.location.href = "sorting.html";
+        }, 1000);
+  
+      }
+
+      else if (
+        argument === "dijkstra_lab" ||
+        argument === "dijkstra_lab/"
+      ) {
+  
+        printLine(
+          "Opening Dijkstra Lab..."
+        );
+  
+        window.setTimeout(() => {
+          window.location.href = "graph.html";
         }, 1000);
   
       }

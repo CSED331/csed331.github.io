@@ -149,12 +149,13 @@
             class="code-block"
             aria-label="FIB1 pseudocode"
           >
-  <pre><code>FIB1(n)
-  if n = 0 then
-      return 0
-  else if n = 1 then
-      return 1
-  return FIB1(n − 1) + FIB1(n − 2)</code></pre>
+  <pre><code><span class="code-function-title">FIB1(n)</span>
+
+if n = 0 then
+    return 0
+else if n = 1 then
+    return 1
+return FIB1(n − 1) + FIB1(n − 2)</code></pre>
           </div>
   
   
@@ -220,14 +221,15 @@
             class="code-block"
             aria-label="FIB2 pseudocode"
           >
-  <pre><code>FIB2(n)
-  if n = 0 then
-      return 0
-  create an array f[0, ... , n]
-  f[0] = 0, f[1] = 1
-  for i = 2, ... , n do
-      f[i] = f[i − 1] + f[i − 2]
-  return f[n]</code></pre>
+  <pre><code><span class="code-function-title">FIB2(n)</span>
+
+if n = 0 then
+    return 0
+create an array f[0, ... , n]
+f[0] = 0, f[1] = 1
+for i = 2, ... , n do
+    f[i] = f[i − 1] + f[i − 2]
+return f[n]</code></pre>
           </div>
   
   

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Dijkstra Lab | CSED331
+  </title>
+
+  <link
+    rel="icon"
+    type="image/png"
+    href="favicon.png"
+  >
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="animation.css"
+  >
+</head>
+
+
+<body class="lab-page">
+
+  <div class="scanlines"></div>
+
+
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
+
+  <header class="lab-header">
+
+    <a
+      class="back-link"
+      href="index.html"
+    >
+      ← BACK TO WORKSTATION
+    </a>
+
+    <div>
+      <strong>CSED331</strong>
+      <span>ALGORITHMS</span>
+    </div>
+
+    <span id="system-clock">
+      --:--:--
+    </span>
+
+  </header>
+
+
+  <main class="lab-shell">
+
+
+    <!-- ===================================================
+         INTRO
+         =================================================== -->
+
+    <section class="lab-intro">
+
+      <div>
+
+        <p class="eyebrow">
+          GRAPH ALGORITHMS
+        </p>
+
+        <h1>
+          Dijkstra Lab
+        </h1>
+
+        <p class="lab-question">
+          Build your own weighted graph and explore how
+          Dijkstra's algorithm finds shortest paths.
+        </p>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         GRAPH BUILDER
+         =================================================== -->
+
+    <section class="algorithm-window graph-builder-window">
+
+      <header class="window-titlebar">
+
+        <span>
+          GRAPH BUILDER
+        </span>
+
+        <span id="graph-lock-label">
+          EDIT MODE
+        </span>
+
+      </header>
+
+
+      <div class="window-body">
+
+
+        <!-- TOOLBAR -->
+
+        <div class="graph-toolbar">
+
+          <button
+            type="button"
+            class="graph-tool-button graph-edit-tool is-active"
+            data-tool="node"
+          >
+            + NODE
+          </button>
+
+
+          <button
+            type="button"
+            class="graph-tool-button graph-edit-tool"
+            data-tool="edge"
+          >
+            + EDGE
+          </button>
+
+
+          <button
+            type="button"
+            class="graph-tool-button graph-edit-tool"
+            data-tool="source"
+          >
+            SOURCE
+          </button>
+
+
+          <button
+            type="button"
+            class="graph-tool-button graph-edit-tool"
+            data-tool="move"
+          >
+            MOVE
+          </button>
+
+
+          <button
+            type="button"
+            class="graph-tool-button graph-edit-tool"
+            data-tool="delete"
+          >
+            DELETE
+          </button>
+
+
+          <button
+            id="clear-graph-button"
+            type="button"
+            class="graph-tool-button graph-clear-button"
+          >
+            CLEAR
+          </button>
+
+        </div>
+
+
+        <div
+          id="graph-builder-message"
+          class="graph-builder-message"
+          aria-live="polite"
+        >
+          Click anywhere on the canvas to create a vertex.
+        </div>
+
+
+        <!-- ===============================================
+             SVG GRAPH CANVAS
+             =============================================== -->
+
+        <div class="graph-canvas-wrapper">
+
+          <svg
+            id="graph-canvas"
+            class="graph-canvas"
+            viewBox="0 0 1000 600"
+            role="img"
+            aria-label="Interactive graph builder"
+          >
+
+            <g id="graph-edge-layer"></g>
+
+            <g id="graph-node-layer"></g>
+
+          </svg>
+
+        </div>
+
+
+        <p class="graph-hint">
+          Edge weights are automatically calculated from
+          Euclidean distance and rounded to one decimal place.
+        </p>
+
+
+        <!-- ===============================================
+             RUN BUTTONS
+             =============================================== -->
+
+        <div class="dijkstra-run-controls">
+
+          <button
+            id="auto-dijkstra-button"
+            type="button"
+            class="dijkstra-auto-button"
+          >
+            ▶ AUTO RUN
+          </button>
+
+
+          <button
+            id="interactive-dijkstra-button"
+            type="button"
+            class="dijkstra-interactive-button"
+          >
+            ◇ TRY IT YOURSELF
+          </button>
+
+
+          <button
+            id="reset-dijkstra-button"
+            type="button"
+            class="dijkstra-reset-button"
+            disabled
+          >
+            RESET RUN
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         EXECUTION
+         =================================================== -->
+
+    <section class="algorithm-window dijkstra-execution-window">
+
+      <header class="window-titlebar">
+
+        <span>
+          DIJKSTRA EXECUTION
+        </span>
+
+        <span id="dijkstra-mode-label">
+          READY
+        </span>
+
+      </header>
+
+
+      <div class="window-body">
+
+        <div class="dijkstra-execution-grid">
+
+          <section class="priority-queue-panel">
+
+            <div class="section-label">
+
+              <span>
+                PRIORITY QUEUE
+              </span>
+
+              <span>
+                tentative distance
+              </span>
+
+            </div>
+
+
+            <div
+              id="priority-queue"
+              class="priority-queue"
+            >
+
+              <div class="pq-placeholder">
+                Run Dijkstra to initialize the queue.
+              </div>
+
+            </div>
+
+          </section>
+
+
+
+          <!-- =============================================
+               CURRENT OPERATION
+               ============================================= -->
+
+          <section class="dijkstra-operation-panel">
+
+            <div class="section-label">
+
+              <span>
+                CURRENT OPERATION
+              </span>
+
+            </div>
+
+
+            <div class="dijkstra-operation-box">
+
+              <div
+                id="current-operation-title"
+                class="current-operation-title"
+              >
+                READY
+              </div>
+
+
+              <div
+                id="current-operation-detail"
+                class="current-operation-detail"
+              >
+                Build a graph and choose a source vertex.
+              </div>
+
+
+              <!-- UPDATE / KEEP -->
+
+              <div
+                id="relax-decision-controls"
+                class="relax-decision-controls is-hidden"
+              >
+
+                <button
+                  id="relax-update-button"
+                  type="button"
+                >
+                  UPDATE
+                </button>
+
+
+                <button
+                  id="relax-keep-button"
+                  type="button"
+                >
+                  KEEP
+                </button>
+
+              </div>
+
+
+              <div
+                id="dijkstra-feedback"
+                class="dijkstra-feedback"
+                aria-live="polite"
+              ></div>
+
+            </div>
+
+
+
+            <!-- ===========================================
+                 LOG
+                 =========================================== -->
+
+            <div class="section-label dijkstra-log-label">
+
+              <span>
+                RUN LOG
+              </span>
+
+            </div>
+
+
+            <div
+              id="dijkstra-log"
+              class="dijkstra-log"
+            >
+
+              <div class="dijkstra-log-empty">
+                No operations yet.
+              </div>
+
+            </div>
+
+          </section>
+
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- ===================================================
+         PSEUDOCODE
+         =================================================== -->
+
+    <section class="algorithm-window dijkstra-code-window">
+
+      <header class="window-titlebar">
+
+        <span>
+          DIJKSTRA
+        </span>
+
+        <span>
+        </span>
+
+      </header>
+
+
+      <div class="window-body">
+        <div class="code-block">
+
+<pre><code><span class="code-function-title">dijkstra(G, ℓ, s)</span>
+
+for all u ∈ V do
+    dist(u) = ∞
+    prev(u) = nil
+
+dist(s) = 0
+H = makequeue(V)
+
+while H is not empty do
+
+    u = deletemin(H)
+
+    for all edges (u, v) ∈ E do
+
+        if dist(v) &gt; dist(u) + ℓ(u, v) then
+
+            dist(v) = dist(u) + ℓ(u, v)
+            prev(v) = u
+            decreasekey(H, v)</code></pre>
+
+      
+        </div></div>
+
+    </section>
+
+  </main>
+
+
+  <script src="graph.js"></script>
+
+</body>
+
+</html>

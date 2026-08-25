@@ -282,6 +282,73 @@
    
    
    /* =========================================================
+      RANDOM FILL
+
+      Browser Math.random() is already reseeded with entropy
+      (including time), so each click yields a new sequence.
+      Mixing Date.now() adds an extra time-based twist.
+      ========================================================= */
+
+   function fillRandomArray() {
+
+     let inputs =
+       Array.from(
+         document.querySelectorAll(
+           ".sort-array-value"
+         )
+       );
+
+
+     if (inputs.length === 0) {
+       createArrayInputs();
+
+       inputs =
+         Array.from(
+           document.querySelectorAll(
+             ".sort-array-value"
+           )
+         );
+     }
+
+
+     const message =
+       document.getElementById(
+         "sort-input-message"
+       );
+
+
+     if (message) {
+       message.textContent = "";
+     }
+
+
+     /*
+       Build a pool 1..99, shuffle (Fisher–Yates), then take
+       the first n values so every cell is unique.
+     */
+     const pool = [];
+
+     for (let value = 1; value <= 99; value += 1) {
+       pool.push(value);
+     }
+
+     for (let i = pool.length - 1; i > 0; i -= 1) {
+       const j =
+         Math.floor(Math.random() * (i + 1));
+
+       const temp = pool[i];
+       pool[i] = pool[j];
+       pool[j] = temp;
+     }
+
+     inputs.forEach((input, index) => {
+       input.value = String(pool[index]);
+     });
+
+   }
+
+
+   /* =========================================================
       READ INPUT
       ========================================================= */
    
@@ -2509,7 +2576,9 @@ for (
          </div>
          `;
    
-     }}
+     }
+
+   }
    
    
    /* =========================================================
@@ -2535,6 +2604,12 @@ for (
    const runButton =
      document.getElementById(
        "run-mergesort-button"
+     );
+
+
+   const randomFillButton =
+     document.getElementById(
+       "random-fill-button"
      );
    
    
@@ -2573,6 +2648,22 @@ for (
        runMergeSort
      );
    
+   }
+
+
+   /* ---------------------------------------------------------
+      RANDOM FILL
+      --------------------------------------------------------- */
+
+   if (
+     randomFillButton
+   ) {
+
+     randomFillButton.addEventListener(
+       "click",
+       fillRandomArray
+     );
+
    }
    
    

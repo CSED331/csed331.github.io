@@ -85,45 +85,15 @@
    );
  
  
- const feedbackElement =
-   document.getElementById(
-     "dijkstra-feedback"
-   );
- 
- 
- const decisionControls =
-   document.getElementById(
-     "relax-decision-controls"
-   );
- 
- 
- const updateButton =
-   document.getElementById(
-     "relax-update-button"
-   );
- 
- 
- const keepButton =
-   document.getElementById(
-     "relax-keep-button"
-   );
- 
- 
  const logElement =
    document.getElementById(
      "dijkstra-log"
    );
  
  
- const autoButton =
+ const runButton =
    document.getElementById(
-     "auto-dijkstra-button"
-   );
- 
- 
- const interactiveButton =
-   document.getElementById(
-     "interactive-dijkstra-button"
+     "run-dijkstra-button"
    );
  
  
@@ -136,6 +106,18 @@
  const clearGraphButton =
    document.getElementById(
      "clear-graph-button"
+   );
+
+
+ const randomGraphButton =
+   document.getElementById(
+     "random-graph-button"
+   );
+
+
+ const randomNodeCountInput =
+   document.getElementById(
+     "random-node-count"
    );
  
  
@@ -534,6 +516,9 @@
        !enabled;
  
    }
+
+
+   /* Random graph stays available; it resets the run itself. */
  
  
    if (
@@ -714,14 +699,41 @@
  
    dist.setAttribute(
      "y",
-     "43"
+     "42"
+   );
+
+
+   /* predecessor */
+
+   const prev =
+     document.createElementNS(
+       SVG_NS,
+       "text"
+     );
+
+
+   prev.classList.add(
+     "graph-node-prev"
+   );
+
+
+   prev.setAttribute(
+     "text-anchor",
+     "middle"
+   );
+
+
+   prev.setAttribute(
+     "y",
+     "58"
    );
  
  
    group.append(
      circle,
      label,
-     dist
+     dist,
+     prev
    );
  
  
@@ -736,7 +748,8 @@
        group,
        circle,
        label,
-       dist
+       dist,
+       prev
      }
    );
  
@@ -1313,25 +1326,6 @@
  function handleNodeClick(nodeId) {
  
    /* -------------------------------------------------------
-      Interactive Dijkstra
-      ------------------------------------------------------- */
- 
-   if (
-     run.active &&
-     run.mode === "interactive" &&
-     run.stage === "select"
-   ) {
- 
-     handleInteractiveVertexChoice(
-       nodeId
-     );
- 
-     return;
- 
-   }
- 
- 
-   /* -------------------------------------------------------
       Finished -> inspect shortest path
       ------------------------------------------------------- */
  
@@ -1561,9 +1555,10 @@
     CLEAR GRAPH
     ========================================================= */
  
- function clearGraph() {
+ function clearGraph(force = false) {
  
    if (
+     !force &&
      isGraphLocked()
    ) {
      return;
@@ -1592,7 +1587,7 @@
  
  
    setBuilderMessage(
-     "Click anywhere on the canvas to create a vertex."
+     "Click anywhere on the canvas to create a vertex, or generate a random graph."
    );
  
  }
@@ -1789,6 +1784,12 @@
          run.dist.get(
            node.id
          );
+
+
+       const previousId =
+         run.prev.get(
+           node.id
+         );
  
  
        const isExecutionVisible =
@@ -1804,6 +1805,26 @@
  
          element.dist.textContent =
            `d=${formatDistance(distance)}`;
+
+
+         if (previousId === null || previousId === undefined) {
+
+           element.prev.textContent =
+             graph.sourceId === node.id
+               ? "prev=—"
+               : "";
+
+         } else {
+
+           const previous =
+             getNode(previousId);
+
+           element.prev.textContent =
+             previous
+               ? `prev=${previous.label}`
+               : "";
+
+         }
  
        }
  
@@ -1813,12 +1834,18 @@
  
          element.dist.textContent =
            "SOURCE";
+
+         element.prev.textContent =
+           "";
  
        }
  
        else {
  
          element.dist.textContent =
+           "";
+
+         element.prev.textContent =
            "";
  
        }
@@ -2035,135 +2062,166 @@
    }
  
  
-   const minCandidates =
-     new Set(
-       getMinimumCandidates()
-         .map(
-           node =>
-             node.id
-         )
+   /*
+     queue is already sorted by tentative distance, so index 0
+     is the heap root (deletemin). Children of i are 2i+1, 2i+2.
+   */
+   const n = queue.length;
+   const depth = Math.floor(Math.log2(n)) + 1;
+ 
+   const nodeWidth = 56;
+   const nodeHeight = 44;
+   const levelGap = 72;
+   const horizontalGap = 18;
+ 
+   /*
+     Leaf spacing determines the whole tree width.
+   */
+   const leafCount = Math.pow(2, depth - 1);
+   const treeWidth = Math.max(
+     220,
+     leafCount * (nodeWidth + horizontalGap)
+   );
+   const treeHeight = depth * levelGap + 24;
+ 
+   const positions = new Array(n);
+ 
+   function place(index, left, right, level) {
+ 
+     if (index >= n) {
+       return;
+     }
+ 
+     const x = (left + right) / 2;
+     const y = 18 + level * levelGap + nodeHeight / 2;
+ 
+     positions[index] = { x, y };
+ 
+     const mid = (left + right) / 2;
+ 
+     place(2 * index + 1, left, mid, level + 1);
+     place(2 * index + 2, mid, right, level + 1);
+ 
+   }
+ 
+   place(0, 0, treeWidth, 0);
+ 
+ 
+   const svg = document.createElementNS(SVG_NS, "svg");
+ 
+   svg.setAttribute("class", "pq-heap-svg");
+   svg.setAttribute("viewBox", `0 0 ${treeWidth} ${treeHeight}`);
+   svg.setAttribute("width", String(treeWidth));
+   svg.setAttribute("height", String(treeHeight));
+   svg.setAttribute("role", "img");
+   svg.setAttribute("aria-label", "Priority queue as a binary min-heap");
+ 
+ 
+   const edgeLayer = document.createElementNS(SVG_NS, "g");
+   const nodeLayer = document.createElementNS(SVG_NS, "g");
+ 
+   svg.append(edgeLayer, nodeLayer);
+ 
+ 
+   for (let i = 1; i < n; i += 1) {
+ 
+     const parent = Math.floor((i - 1) / 2);
+     const from = positions[parent];
+     const to = positions[i];
+ 
+     const line = document.createElementNS(SVG_NS, "line");
+ 
+     line.setAttribute("class", "pq-heap-edge");
+     line.setAttribute("x1", String(from.x));
+     line.setAttribute("y1", String(from.y + nodeHeight / 2 - 4));
+     line.setAttribute("x2", String(to.x));
+     line.setAttribute("y2", String(to.y - nodeHeight / 2 + 4));
+ 
+     edgeLayer.appendChild(line);
+ 
+   }
+ 
+ 
+   queue.forEach((node, index) => {
+ 
+     const { x, y } = positions[index];
+     const isMin = index === 0;
+ 
+     const group = document.createElementNS(SVG_NS, "g");
+ 
+     group.setAttribute(
+       "class",
+       isMin ? "pq-heap-node is-min" : "pq-heap-node"
+     );
+     group.setAttribute(
+       "transform",
+       `translate(${x} ${y})`
      );
  
  
-   queue.forEach(
-     node => {
+     const rect = document.createElementNS(SVG_NS, "rect");
  
-       const entry =
-         document.createElement(
-           "button"
-         );
- 
- 
-       entry.type =
-         "button";
+     rect.setAttribute("class", "pq-heap-rect");
+     rect.setAttribute("x", String(-nodeWidth / 2));
+     rect.setAttribute("y", String(-nodeHeight / 2));
+     rect.setAttribute("width", String(nodeWidth));
+     rect.setAttribute("height", String(nodeHeight));
+     rect.setAttribute("rx", "7");
  
  
-       entry.className =
-         "pq-entry";
+     const label = document.createElementNS(SVG_NS, "text");
+ 
+     label.setAttribute("class", "pq-heap-label");
+     label.setAttribute("y", "-5");
+     label.setAttribute("text-anchor", "middle");
+     label.setAttribute("dominant-baseline", "middle");
+     label.textContent = node.label;
  
  
-       entry.dataset.nodeId =
-         node.id;
+     const distance = document.createElementNS(SVG_NS, "text");
+ 
+     distance.setAttribute("class", "pq-heap-distance");
+     distance.setAttribute("y", "12");
+     distance.setAttribute("text-anchor", "middle");
+     distance.setAttribute("dominant-baseline", "middle");
+     distance.textContent = formatDistance(
+       run.dist.get(node.id)
+     );
  
  
-       const name =
-         document.createElement(
-           "span"
-         );
+     group.append(rect, label, distance);
  
+     if (isMin) {
  
-       name.className =
-         "pq-node-name";
+       const badge = document.createElementNS(SVG_NS, "text");
  
+       badge.setAttribute("class", "pq-heap-min-badge");
+       badge.setAttribute("x", String(nodeWidth / 2 - 2));
+       badge.setAttribute("y", String(-nodeHeight / 2 - 6));
+       badge.setAttribute("text-anchor", "end");
+       badge.textContent = "MIN";
  
-       name.textContent =
-         node.label;
- 
- 
-       const distance =
-         document.createElement(
-           "span"
-         );
- 
- 
-       distance.className =
-         "pq-node-distance";
- 
- 
-       distance.textContent =
-         formatDistance(
-           run.dist.get(
-             node.id
-           )
-         );
- 
- 
-       entry.append(
-         name,
-         distance
-       );
- 
- 
-       if (
-         minCandidates.has(
-           node.id
-         )
-       ) {
- 
-         entry.classList.add(
-           "is-min"
-         );
- 
- 
-         const badge =
-           document.createElement(
-             "span"
-           );
- 
- 
-         badge.className =
-           "pq-min-badge";
- 
- 
-         badge.textContent =
-           "MIN";
- 
- 
-         entry.appendChild(
-           badge
-         );
- 
-       }
- 
- 
-       entry.disabled =
-         !(
-           run.active &&
-           run.mode === "interactive" &&
-           run.stage === "select"
-         );
- 
- 
-       entry.addEventListener(
-         "click",
-         () => {
- 
-           handleInteractiveVertexChoice(
-             node.id
-           );
- 
-         }
-       );
- 
- 
-       priorityQueueElement.appendChild(
-         entry
-       );
+       group.appendChild(badge);
  
      }
-   );
+ 
+     nodeLayer.appendChild(group);
+ 
+   });
+ 
+ 
+   const scroll = document.createElement("div");
+ 
+   scroll.className = "pq-heap-scroll";
+   scroll.appendChild(svg);
+ 
+   priorityQueueElement.appendChild(scroll);
  
  }
+ 
+ 
+ 
+ 
  
  
  
@@ -2176,37 +2234,12 @@
    detail
  ) {
  
-   operationTitle.textContent =
-     title;
+   if (operationTitle) {
+     operationTitle.textContent = title;
+   }
  
- 
-   operationDetail.textContent =
-     detail;
- 
- }
- 
- 
- function setFeedback(
-   text = "",
-   type = ""
- ) {
- 
-   feedbackElement.textContent =
-     text;
- 
- 
-   feedbackElement.className =
-     "dijkstra-feedback";
- 
- 
-   if (
-     type
-   ) {
- 
-     feedbackElement.classList.add(
-       `is-${type}`
-     );
- 
+   if (operationDetail) {
+     operationDetail.textContent = detail;
    }
  
  }
@@ -2267,18 +2300,7 @@
  
  
  
- /* =========================================================
-    DECISION BUTTONS
-    ========================================================= */
  
- function showDecisionControls(show) {
- 
-   decisionControls.classList.toggle(
-     "is-hidden",
-     !show
-   );
- 
- }
  
  
  
@@ -2357,14 +2379,6 @@
    );
  
  
-   setFeedback();
- 
- 
-   showDecisionControls(
-     false
-   );
- 
- 
    modeLabel.textContent =
      "READY";
  
@@ -2384,11 +2398,7 @@
      true;
  
  
-   autoButton.disabled =
-     false;
- 
- 
-   interactiveButton.disabled =
+   runButton.disabled =
      false;
  
  
@@ -2470,11 +2480,7 @@
    );
  
  
-   autoButton.disabled =
-     true;
- 
- 
-   interactiveButton.disabled =
+   runButton.disabled =
      true;
  
  
@@ -2483,17 +2489,7 @@
  
  
    modeLabel.textContent =
-     mode === "auto"
-       ? "AUTO RUN"
-       : "INTERACTIVE";
- 
- 
-   setFeedback();
- 
- 
-   showDecisionControls(
-     false
-   );
+     "RUNNING";
  
  
    syncNodeClasses();
@@ -2715,6 +2711,10 @@
        nodeElement.dist.classList.add(
          "is-updated"
        );
+
+       nodeElement.prev.classList.add(
+         "is-updated"
+       );
  
  
        await wait(
@@ -2723,6 +2723,10 @@
  
  
        nodeElement.dist.classList.remove(
+         "is-updated"
+       );
+
+       nodeElement.prev.classList.remove(
          "is-updated"
        );
  
@@ -2915,491 +2919,6 @@
  
  
  /* =========================================================
-    INTERACTIVE DIJKSTRA
-    ========================================================= */
- 
- function startInteractiveDijkstra() {
- 
-   if (
-     !validateGraph()
-   ) {
-     return;
-   }
- 
- 
-   initializeDijkstra(
-     "interactive"
-   );
- 
- 
-   beginInteractiveSelection();
- 
- }
- 
- 
- 
- /* =========================================================
-    ASK FOR NEXT VERTEX
-    ========================================================= */
- 
- function beginInteractiveSelection() {
- 
-   const minimums =
-     getMinimumCandidates();
- 
- 
-   if (
-     minimums.length === 0
-   ) {
- 
-     finishDijkstra(
-       runToken
-     );
- 
-     return;
- 
-   }
- 
- 
-   run.stage =
-     "select";
- 
- 
-   run.currentNodeId =
-     null;
- 
- 
-   run.currentEdgeId =
-     null;
- 
- 
-   run.relaxTargetId =
-     null;
- 
- 
-   run.currentRelaxation =
-     null;
- 
- 
-   showDecisionControls(
-     false
-   );
- 
- 
-   setFeedback();
- 
- 
-   setOperation(
-     "YOUR TURN",
-     "Which vertex should be returned by deletemin()?\nClick a vertex or a priority queue entry."
-   );
- 
- 
-   syncNodeClasses();
-   syncEdgeClasses();
- 
-   renderPriorityQueue();
- 
- }
- 
- 
- 
- /* =========================================================
-    STUDENT SELECTS NEXT VERTEX
-    ========================================================= */
- 
- async function handleInteractiveVertexChoice(
-   nodeId
- ) {
- 
-   if (
-     !run.active ||
-     run.mode !== "interactive" ||
-     run.stage !== "select"
-   ) {
-     return;
-   }
- 
- 
-   if (
-     run.finalized.has(
-       nodeId
-     )
-   ) {
- 
-     setFeedback(
-       "That vertex is already finalized.",
-       "wrong"
-     );
- 
-     return;
- 
-   }
- 
- 
-   const minimums =
-     getMinimumCandidates();
- 
- 
-   const correct =
-     minimums.some(
-       node =>
-         node.id === nodeId
-     );
- 
- 
-   if (
-     !correct
-   ) {
- 
-     setFeedback(
-       "Not yet. There is a smaller tentative distance.",
-       "wrong"
-     );
- 
-     return;
- 
-   }
- 
- 
-   setFeedback(
-     "Correct.",
-     "correct"
-   );
- 
- 
-   finalizeVertex(
-     nodeId
-   );
- 
- 
-   await wait(
-     650
-   );
- 
- 
-   if (
-     !run.active
-   ) {
-     return;
-   }
- 
- 
-   run.neighborQueue =
-     getNeighborEdges(
-       nodeId
-     );
- 
- 
-   run.neighborIndex =
-     0;
- 
- 
-   presentNextInteractiveRelaxation();
- 
- }
- 
- 
- 
- /* =========================================================
-    PRESENT NEXT EDGE
-    ========================================================= */
- 
- function presentNextInteractiveRelaxation() {
- 
-   if (
-     run.neighborIndex >=
-     run.neighborQueue.length
-   ) {
- 
-     run.currentNodeId =
-       null;
- 
- 
-     beginInteractiveSelection();
- 
-     return;
- 
-   }
- 
- 
-   const item =
-     run.neighborQueue[
-       run.neighborIndex
-     ];
- 
- 
-   const u =
-     run.currentNodeId;
- 
- 
-   const v =
-     item.neighborId;
- 
- 
-   const oldDistance =
-     run.dist.get(
-       v
-     );
- 
- 
-   const candidate =
-     round1(
-       run.dist.get(
-         u
-       ) +
-       item.edge.weight
-     );
- 
- 
-   const shouldUpdate =
-     candidate <
-     oldDistance - EPS;
- 
- 
-   run.currentRelaxation = {
- 
-     u,
-     v,
- 
-     edge:
-       item.edge,
- 
-     candidate,
- 
-     oldDistance,
- 
-     shouldUpdate
- 
-   };
- 
- 
-   run.currentEdgeId =
-     item.edge.id;
- 
- 
-   run.relaxTargetId =
-     v;
- 
- 
-   run.stage =
-     "relax";
- 
- 
-   syncNodeClasses();
-   syncEdgeClasses();
- 
- 
-   const uNode =
-     getNode(
-       u
-     );
- 
- 
-   const vNode =
-     getNode(
-       v
-     );
- 
- 
-   setOperation(
-     `relax(${uNode.label}, ${vNode.label})`,
-     `current dist(${vNode.label}) = ${formatDistance(oldDistance)}\n` +
-     `candidate = ${formatDistance(run.dist.get(u))} + ${item.edge.weight.toFixed(1)} = ${formatDistance(candidate)}\n\n` +
-     `Should dist(${vNode.label}) be updated?`
-   );
- 
- 
-   setFeedback();
- 
- 
-   showDecisionControls(
-     true
-   );
- 
- }
- 
- 
- 
- /* =========================================================
-    STUDENT UPDATE / KEEP
-    ========================================================= */
- 
- async function handleInteractiveDecision(
-   chooseUpdate
- ) {
- 
-   if (
-     !run.active ||
-     run.mode !== "interactive" ||
-     run.stage !== "relax"
-   ) {
-     return;
-   }
- 
- 
-   const info =
-     run.currentRelaxation;
- 
- 
-   if (!info) return;
- 
- 
-   const correct =
-     chooseUpdate ===
-     info.shouldUpdate;
- 
- 
-   if (
-     !correct
-   ) {
- 
-     setFeedback(
-       chooseUpdate
-         ? "No. The candidate is not smaller."
-         : "The candidate is smaller. dist should be updated.",
-       "wrong"
-     );
- 
-     return;
- 
-   }
- 
- 
-   showDecisionControls(
-     false
-   );
- 
- 
-   setFeedback(
-     "Correct.",
-     "correct"
-   );
- 
- 
-   const uNode =
-     getNode(
-       info.u
-     );
- 
- 
-   const vNode =
-     getNode(
-       info.v
-     );
- 
- 
-   if (
-     info.shouldUpdate
-   ) {
- 
-     run.dist.set(
-       info.v,
-       info.candidate
-     );
- 
- 
-     run.prev.set(
-       info.v,
-       info.u
-     );
- 
- 
-     addLog(
-       `decreasekey(${vNode.label})    ${formatDistance(info.oldDistance)} → ${formatDistance(info.candidate)}`
-     );
- 
- 
-     setOperation(
-       `decreasekey(${vNode.label})`,
-       `dist(${vNode.label}): ${formatDistance(info.oldDistance)} → ${formatDistance(info.candidate)}\nprev(${vNode.label}) = ${uNode.label}`
-     );
- 
- 
-     renderPriorityQueue();
- 
-     syncNodeClasses();
- 
- 
-     const element =
-       nodeElements.get(
-         info.v
-       );
- 
- 
-     if (
-       element
-     ) {
- 
-       element.dist.classList.add(
-         "is-updated"
-       );
- 
- 
-       await wait(
-         700
-       );
- 
- 
-       element.dist.classList.remove(
-         "is-updated"
-       );
- 
-     }
- 
-   }
- 
-   else {
- 
-     addLog(
-       `keep dist(${vNode.label}) = ${formatDistance(info.oldDistance)}`
-     );
- 
- 
-     setOperation(
-       `keep dist(${vNode.label})`,
-       "No decreasekey is needed."
-     );
- 
- 
-     await wait(
-       500
-     );
- 
-   }
- 
- 
-   run.currentEdgeId =
-     null;
- 
- 
-   run.relaxTargetId =
-     null;
- 
- 
-   run.currentRelaxation =
-     null;
- 
- 
-   syncNodeClasses();
-   syncEdgeClasses();
- 
- 
-   run.neighborIndex += 1;
- 
- 
-   await wait(
-     250
-   );
- 
- 
-   presentNextInteractiveRelaxation();
- 
- }
- 
- 
- 
- /* =========================================================
     FIND EDGE BETWEEN TWO VERTICES
     ========================================================= */
  
@@ -3469,11 +2988,6 @@
      null;
  
  
-   showDecisionControls(
-     false
-   );
- 
- 
    /*
      Build shortest-path tree from prev
    */
@@ -3539,11 +3053,7 @@
    );
  
  
-   autoButton.disabled =
-     false;
- 
- 
-   interactiveButton.disabled =
+   runButton.disabled =
      false;
  
  
@@ -3729,10 +3239,215 @@
  
  
  /* =========================================================
+    RANDOM CONNECTED GRAPH
+    ========================================================= */
+
+ function shuffleInPlace(values) {
+
+   for (let i = values.length - 1; i > 0; i -= 1) {
+
+     const j = Math.floor(Math.random() * (i + 1));
+     const temp = values[i];
+     values[i] = values[j];
+     values[j] = temp;
+
+   }
+
+   return values;
+
+ }
+
+
+ function generateRandomGraph() {
+
+   /*
+     Cancel any running / finished execution, then force-clear
+     so the canvas is always rebuilt.
+   */
+   if (run.active || run.finished) {
+     resetExecution();
+   }
+
+
+   let n = Number.parseInt(
+     randomNodeCountInput
+       ? randomNodeCountInput.value
+       : "6",
+     10
+   );
+
+
+   if (Number.isNaN(n)) {
+     n = 6;
+   }
+
+
+   n = Math.max(2, Math.min(12, n));
+
+
+   if (randomNodeCountInput) {
+     randomNodeCountInput.value = String(n);
+   }
+
+
+   clearGraph(true);
+
+
+   /*
+     Mitchell's best-candidate sampling: for each vertex try a
+     handful of random points and keep the one that sits
+     farthest from everything placed so far. This scatters the
+     vertices over the whole canvas while still keeping the
+     circles and weight labels from overlapping.
+   */
+   const minX = 80;
+   const maxX = 920;
+   const minY = 90;
+   const maxY = 510;
+
+   const placed = [];
+
+   for (let i = 0; i < n; i += 1) {
+
+     let best = null;
+     let bestDistance = -1;
+
+     for (let attempt = 0; attempt < 25; attempt += 1) {
+
+       const candidate = {
+         x: minX + Math.random() * (maxX - minX),
+         y: minY + Math.random() * (maxY - minY)
+       };
+
+       let nearest = Infinity;
+
+       for (const point of placed) {
+         nearest = Math.min(
+           nearest,
+           Math.hypot(candidate.x - point.x, candidate.y - point.y)
+         );
+       }
+
+       if (nearest > bestDistance) {
+         best = candidate;
+         bestDistance = nearest;
+       }
+
+     }
+
+     placed.push(best);
+
+     addNode(best.x, best.y);
+
+   }
+
+
+   const nodeIds = graph.nodes.map(node => node.id);
+   const possible = [];
+
+
+   for (let i = 0; i < n; i += 1) {
+     for (let j = i + 1; j < n; j += 1) {
+       possible.push([nodeIds[i], nodeIds[j]]);
+     }
+   }
+
+
+   shuffleInPlace(possible);
+
+
+   /*
+     Union-Find: first build a spanning tree (n - 1 edges),
+     then add extra edges up to a random connected count.
+   */
+   const parent = {};
+
+   for (const id of nodeIds) {
+     parent[id] = id;
+   }
+
+
+   function find(id) {
+     if (parent[id] !== id) {
+       parent[id] = find(parent[id]);
+     }
+     return parent[id];
+   }
+
+
+   function unite(a, b) {
+     const ra = find(a);
+     const rb = find(b);
+     if (ra === rb) return false;
+     parent[rb] = ra;
+     return true;
+   }
+
+
+   const minEdges = n - 1;
+   const maxEdges = (n * (n - 1)) / 2;
+   const edgeTarget =
+     minEdges +
+     Math.floor(Math.random() * (maxEdges - minEdges + 1));
+
+
+   let edgeCount = 0;
+   const leftover = [];
+
+
+   for (const [a, b] of possible) {
+
+     if (edgeCount < minEdges && unite(a, b)) {
+       addEdge(a, b);
+       edgeCount += 1;
+     } else {
+       leftover.push([a, b]);
+     }
+
+   }
+
+
+   shuffleInPlace(leftover);
+
+
+   for (const [a, b] of leftover) {
+
+     if (edgeCount >= edgeTarget) {
+       break;
+     }
+
+     addEdge(a, b);
+     edgeCount += 1;
+
+   }
+
+
+   const sourceIndex =
+     Math.floor(Math.random() * graph.nodes.length);
+
+   graph.sourceId = graph.nodes[sourceIndex].id;
+
+
+   setTool("node");
+   setEditingEnabled(true);
+
+
+   setBuilderMessage(
+     `Random connected graph: ${n} nodes, ${edgeCount} edges. Source: ${getNode(graph.sourceId).label}.`
+   );
+
+
+   syncNodeClasses();
+   syncEdgeClasses();
+
+ }
+
+
+ /* =========================================================
     RUN BUTTONS
     ========================================================= */
  
- autoButton.addEventListener(
+ runButton.addEventListener(
    "click",
    async () => {
  
@@ -3751,52 +3466,36 @@
  );
  
  
- interactiveButton.addEventListener(
-   "click",
-   () => {
- 
-     if (
-       run.finished
-     ) {
- 
-       resetExecution();
- 
-     }
- 
- 
-     startInteractiveDijkstra();
- 
-   }
- );
- 
- 
  resetRunButton.addEventListener(
    "click",
    resetExecution
  );
- 
- 
- 
- /* =========================================================
-    INTERACTIVE DECISIONS
-    ========================================================= */
- 
- updateButton.addEventListener(
-   "click",
-   () =>
-     handleInteractiveDecision(
-       true
-     )
- );
- 
- 
- keepButton.addEventListener(
-   "click",
-   () =>
-     handleInteractiveDecision(
-       false
-     )
- );
+
+
+ if (randomGraphButton) {
+
+   randomGraphButton.addEventListener(
+     "click",
+     generateRandomGraph
+   );
+
+ }
+
+
+ if (randomNodeCountInput) {
+
+   randomNodeCountInput.addEventListener(
+     "keydown",
+     event => {
+
+       if (event.key === "Enter") {
+         generateRandomGraph();
+       }
+
+     }
+   );
+
+ }
  
  
  

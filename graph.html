@@ -22,13 +22,25 @@
   </header>
 
   <main class="lab-shell">
-    <section class="lab-intro lab-intro-solo">
+    <section class="lab-intro">
       <div>
         <p class="eyebrow">GRAPH ALGORITHMS</p>
         <h1>Dijkstra Lab</h1>
         <p class="lab-question">
           Build your own weighted graph and explore how Dijkstra's algorithm
           finds shortest paths.
+        </p>
+      </div>
+
+      <div class="control-console">
+        <label for="random-node-count">NODES (2 ≤ n ≤ 12)</label>
+        <div class="input-row">
+          <input id="random-node-count" type="number" min="2" max="12" value="6">
+          <button id="random-graph-button" type="button">RANDOM GRAPH</button>
+        </div>
+        <p class="control-note">
+          Creates a random connected graph. Edge count is chosen between
+          n − 1 and a complete graph.
         </p>
       </div>
     </section>
@@ -50,7 +62,7 @@
         </div>
 
         <div id="graph-builder-message" class="graph-builder-message" aria-live="polite">
-          Click anywhere on the canvas to create a vertex.
+          Click anywhere on the canvas to create a vertex, or generate a random graph.
         </div>
 
         <div class="graph-canvas-wrapper">
@@ -72,8 +84,7 @@
         </p>
 
         <div class="action-row">
-          <button id="auto-dijkstra-button" type="button" class="primary-button">▶ AUTO RUN</button>
-          <button id="interactive-dijkstra-button" type="button" class="accent-button">◇ TRY IT YOURSELF</button>
+          <button id="run-dijkstra-button" type="button" class="primary-button">▶ RUN</button>
           <button id="reset-dijkstra-button" type="button" class="secondary-button" disabled>RESET RUN</button>
         </div>
       </div>
@@ -90,7 +101,7 @@
           <section class="priority-queue-panel">
             <div class="section-label">
               <span>PRIORITY QUEUE</span>
-              <span>tentative distance</span>
+              <span>binary min-heap</span>
             </div>
             <div id="priority-queue" class="priority-queue">
               <div class="pq-placeholder">Run Dijkstra to initialize the queue.</div>
@@ -107,13 +118,6 @@
               <div id="current-operation-detail" class="current-operation-detail">
                 Build a graph and choose a source vertex.
               </div>
-
-              <div id="relax-decision-controls" class="relax-decision-controls is-hidden">
-                <button id="relax-update-button" type="button" class="primary-button">UPDATE</button>
-                <button id="relax-keep-button" type="button" class="secondary-button">KEEP</button>
-              </div>
-
-              <div id="dijkstra-feedback" class="dijkstra-feedback" aria-live="polite"></div>
             </div>
 
             <div class="section-label">

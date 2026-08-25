@@ -510,7 +510,16 @@
 .graph-node-distance {
   fill: var(--muted);
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  pointer-events: none;
+  transition: fill 200ms ease, font-size 200ms ease, font-weight 200ms ease;
+}
+
+.graph-node-prev {
+  fill: #8fb0d4;
+  font-family: var(--mono);
+  font-size: 11px;
   font-weight: 800;
   pointer-events: none;
   transition: fill 200ms ease, font-size 200ms ease, font-weight 200ms ease;
@@ -554,9 +563,10 @@
   stroke-width: 5;
 }
 
-.graph-node-distance.is-updated {
+.graph-node-distance.is-updated,
+.graph-node-prev.is-updated {
   fill: var(--success);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 900;
 }
 

@@ -974,7 +974,7 @@ p {
 
 .dijkstra-execution-grid {
   display: grid;
-  grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.4fr);
+  grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.2fr);
   gap: 22px;
 }
 
@@ -987,9 +987,9 @@ p {
 .priority-queue {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  min-height: 240px;
+  min-height: 280px;
   padding: 14px;
+  overflow: auto;
 }
 
 .pq-placeholder {
@@ -1003,57 +1003,67 @@ p {
   text-align: center;
 }
 
-.pq-entry {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 10px;
+.pq-heap-scroll {
+  display: flex;
+  justify-content: center;
   width: 100%;
-  padding: 10px 12px;
-  color: var(--text);
-  border: 1px solid #45536d;
-  border-radius: 6px;
-  background: #17243a;
+  overflow-x: auto;
+  padding: 8px 4px 12px;
+}
+
+.pq-heap-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.pq-heap-edge {
+  stroke: #62708a;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.pq-heap-rect {
+  fill: #17243a;
+  stroke: #6d7e9a;
+  stroke-width: 1.8;
+}
+
+.pq-heap-node.is-min .pq-heap-rect {
+  fill: rgba(245, 184, 75, 0.14);
+  stroke: var(--highlight);
+  stroke-width: 2.4;
+}
+
+.pq-heap-label,
+.pq-heap-distance,
+.pq-heap-min-badge {
   font-family: var(--mono);
-  text-align: left;
-  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+  pointer-events: none;
 }
 
-.pq-entry:not(:disabled) {
-  cursor: pointer;
-}
-
-.pq-entry:not(:disabled):hover {
-  border-color: var(--highlight);
-  transform: translateX(3px);
-}
-
-.pq-entry.is-min {
-  border-color: var(--highlight);
-  background: rgba(245, 184, 75, 0.08);
-}
-
-.pq-node-name {
-  font-size: 0.92rem;
+.pq-heap-label {
+  fill: var(--text);
+  font-size: 13px;
   font-weight: 900;
 }
 
-.pq-node-distance {
-  font-size: 0.9rem;
+.pq-heap-distance {
+  fill: var(--muted);
+  font-size: 11px;
   font-weight: 800;
 }
 
-.pq-min-badge {
-  position: absolute;
-  top: -7px;
-  right: 7px;
-  padding: 1px 5px;
-  color: #111308;
-  border-radius: 999px;
-  background: var(--highlight);
-  font-size: 0.56rem;
+.pq-heap-node.is-min .pq-heap-distance {
+  fill: var(--highlight);
+}
+
+.pq-heap-min-badge {
+  fill: var(--highlight);
+  font-size: 9px;
   font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
 .dijkstra-operation-box {
@@ -1076,36 +1086,6 @@ p {
   font-size: 0.9rem;
   line-height: 1.7;
   white-space: pre-line;
-}
-
-.relax-decision-controls {
-  display: flex;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.relax-decision-controls.is-hidden {
-  display: none;
-}
-
-#relax-update-button {
-  min-width: 110px;
-}
-
-.dijkstra-feedback {
-  min-height: 22px;
-  margin-top: 13px;
-  font-family: var(--mono);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.dijkstra-feedback.is-correct {
-  color: var(--success);
-}
-
-.dijkstra-feedback.is-wrong {
-  color: var(--danger);
 }
 
 .dijkstra-log {

@@ -36,43 +36,6 @@
    
    
    /* =========================================================
-      CLOCK
-      ========================================================= */
-   
-   function updateClock() {
-   
-     const clock =
-       document.getElementById(
-         "system-clock"
-       );
-   
-   
-     if (!clock) return;
-   
-   
-     const now =
-       new Date();
-   
-   
-     clock.textContent =
-       now.toLocaleString(
-         "ko-KR",
-         {
-           month: "2-digit",
-           day: "2-digit",
-   
-           hour: "2-digit",
-           minute: "2-digit",
-           second: "2-digit",
-   
-           hour12: false
-         }
-       );
-   
-   }
-   
-   
-   /* =========================================================
       WAIT
       ========================================================= */
    
@@ -1546,74 +1509,6 @@
    
    
    /* =========================================================
-      STATUS
-      ========================================================= */
-   
-   function setSortStatus(
-     phase,
-     depth,
-     current
-   ) {
-   
-     const phaseElement =
-       document.getElementById(
-         "sort-live-phase"
-       );
-   
-   
-     const phaseLabel =
-       document.getElementById(
-         "sort-phase-label"
-       );
-   
-   
-     const depthElement =
-       document.getElementById(
-         "sort-live-depth"
-       );
-   
-   
-     const currentElement =
-       document.getElementById(
-         "sort-live-current"
-       );
-   
-   
-     if (phaseElement) {
-   
-       phaseElement.textContent =
-         phase;
-   
-     }
-   
-   
-     if (phaseLabel) {
-   
-       phaseLabel.textContent =
-         phase;
-   
-     }
-   
-   
-     if (depthElement) {
-   
-       depthElement.textContent =
-         String(depth);
-   
-     }
-   
-   
-     if (currentElement) {
-   
-       currentElement.textContent =
-         current;
-   
-     }
-   
-   }
-   
-   
-   /* =========================================================
       CLEAR TEMPORARY HIGHLIGHTS
       ========================================================= */
    
@@ -1869,27 +1764,7 @@
      nodeMap,
      runId
    ) {
-   
-     let comparisonCount = 0;
-   
-   
-     const comparisonElement =
-       document.getElementById(
-         "sort-live-comparisons"
-       );
-   
-   
-     if (
-       comparisonElement
-     ) {
-   
-       comparisonElement.textContent =
-         "0";
-   
-     }
-   
-   
-     for (
+for (
        const event
        of events
      ) {
@@ -1924,13 +1799,6 @@
          info.callCard.classList.add(
            "is-visible",
            "is-active"
-         );
-   
-   
-         setSortStatus(
-           "RECURSE",
-           event.depth,
-           `mergesort([${event.values.join(", ")}])`
          );
    
    
@@ -2008,13 +1876,6 @@
          parentInfo.splitFlow.classList.add(
            "is-visible",
            "is-active"
-         );
-   
-   
-         setSortStatus(
-           "SPLIT",
-           event.depth,
-           `[${event.left.join(", ")}]  |  [${event.right.join(", ")}]`
          );
    
    
@@ -2118,13 +1979,6 @@
            "BASE CASE";
    
    
-         setSortStatus(
-           "BASE CASE",
-           event.depth,
-           `[${event.values.join(", ")}]`
-         );
-   
-   
          await wait(
            SORT_TIMING.baseCase
          );
@@ -2216,13 +2070,6 @@
            "";
    
    
-         setSortStatus(
-           "MERGE",
-           event.depth,
-           `[${event.left.join(", ")}] + [${event.right.join(", ")}]`
-         );
-   
-   
          await wait(
            SORT_TIMING.mergeStart
          );
@@ -2272,19 +2119,6 @@
            !rightInfo
          ) {
            continue;
-         }
-   
-   
-         comparisonCount += 1;
-   
-   
-         if (
-           comparisonElement
-         ) {
-   
-           comparisonElement.textContent =
-             comparisonCount.toLocaleString();
-   
          }
    
    
@@ -2353,13 +2187,6 @@
    
          parentInfo.resultNote.textContent =
            `compare ${event.leftValue} vs ${event.rightValue}`;
-   
-   
-         setSortStatus(
-           "COMPARE",
-           event.depth,
-           `${event.leftValue} vs ${event.rightValue} → output[${event.outputIndex}]`
-         );
    
    
          await wait(
@@ -2443,13 +2270,6 @@
            "";
    
    
-         setSortStatus(
-           "MOVE",
-           event.depth,
-           `${event.value} ↓ result[${event.outputIndex}]`
-         );
-   
-   
          await animateValueMove(
            sourceCell,
            targetCell,
@@ -2510,13 +2330,6 @@
            "";
    
    
-         setSortStatus(
-           "MERGED",
-           event.depth,
-           `[${event.result.join(", ")}]`
-         );
-   
-   
          await wait(
            SORT_TIMING.mergeDone
          );
@@ -2531,13 +2344,6 @@
         ===================================================== */
    
      clearStepHighlights();
-   
-   
-     setSortStatus(
-       "DONE",
-       0,
-       "Array sorted"
-     );
    
    
      await wait(
@@ -2621,33 +2427,7 @@
      const nodeMap =
        renderMergeSortDiagram(
          root
-       );
-   
-   
-     const comparisonElement =
-       document.getElementById(
-         "sort-live-comparisons"
-       );
-   
-   
-     if (
-       comparisonElement
-     ) {
-   
-       comparisonElement.textContent =
-         "0";
-   
-     }
-   
-   
-     setSortStatus(
-       "READY",
-       0,
-       "Starting mergesort..."
-     );
-   
-   
-     /* =====================================================
+       );/* =====================================================
         SCROLL TO VISUALIZATION
         ===================================================== */
    
@@ -2729,46 +2509,12 @@
          </div>
          `;
    
-     }
-   
-   
-     const comparisonElement =
-       document.getElementById(
-         "sort-live-comparisons"
-       );
-   
-   
-     if (
-       comparisonElement
-     ) {
-   
-       comparisonElement.textContent =
-         "0";
-   
-     }
-   
-   
-     setSortStatus(
-       "READY",
-       "-",
-       "-"
-     );
-   
-   }
+     }}
    
    
    /* =========================================================
       INITIALIZATION
       ========================================================= */
-   
-   updateClock();
-   
-   
-   window.setInterval(
-     updateClock,
-     1000
-   );
-   
    
    /* ---------------------------------------------------------
       ELEMENTS

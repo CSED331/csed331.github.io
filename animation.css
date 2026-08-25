@@ -1,2875 +1,591 @@
 .tree-container {
-    position: relative;
-  
-    width: 100%;
-    min-height: 420px;
-  
-    padding: 20px;
-  
-    overflow: hidden;
-  
-    border: 1px solid var(--line-soft);
-    border-radius: 7px;
-  
-    background:
-      linear-gradient(
-        rgba(121, 148, 183, 0.04) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        90deg,
-        rgba(121, 148, 183, 0.04) 1px,
-        transparent 1px
-      ),
-      #0c1422;
-  
-    background-size: 22px 22px;
-  }
-  
-  
-  .tree-svg {
-    display: block;
-  
-    width: 100%;
-    height: auto;
-  
-    margin: 0 auto;
-  
-    overflow: visible;
-  }
-  
-  /* 간선이 부모에서 자식 방향으로 그려지는 효과 */
-  .tree-edge {
-    fill: none;
-    stroke: #607491;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    opacity: 0;
-    stroke-dasharray: 160;
-    stroke-dashoffset: 160;
-    transition:
-      opacity 220ms ease,
-      stroke-dashoffset 480ms ease;
-  }
-  
-  .tree-edge.is-visible {
-    opacity: 1;
-    stroke-dashoffset: 0;
-  }
-  
-  /* 각 노드는 조금 아래로 내려오며 나타납니다. */
-  .tree-node-group {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.94);
-    transform-box: fill-box;
-    transform-origin: center;
-    transition:
-      opacity 280ms ease,
-      transform 360ms cubic-bezier(0.2, 0.75, 0.25, 1);
-  }
-  
-  .tree-node-group.is-visible {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  
-  .tree-node-rect {
-    fill: #17243a;
-    stroke: #6682a8;
-    stroke-width: 1.4;
-  }
-  
-  .tree-node-group.is-base .tree-node-rect {
-    fill: #302719;
-    stroke: #c4933d;
-  }
-  
-  .tree-node-text {
-    fill: #f8fafc;
-    font-family: "Cascadia Code", Consolas, "Courier New", monospace;
-    /* font-size: 12px; */
-    font-weight: 650;
-    dominant-baseline: middle;
-    text-anchor: middle;
-    pointer-events: none;
-  }
-  
-  .tree-node-group.is-base .tree-node-text {
-    fill: #ffe0a0;
-  }
-  
-  /* 실행 중 버튼 상태 */
-  #run-button:disabled {
-    cursor: default;
-    opacity: 0.72;
-  }
-  
-  /* 모션 감소 설정을 사용하는 사용자는 즉시 표시 */
-  @media (prefers-reduced-motion: reduce) {
-    .tree-edge,
-    .tree-node-group,
-    .dp-row {
-      transition: none;
-    }
-  
-    .dp-row.is-visible .dp-cell {
-      animation: none;
-    }
-  }
-
-/* =========================================================
-   FIB1 execution states
-   ========================================================= */
-
-
-/*
-  현재 실제로 실행 중인 함수
-*/
-.tree-node-group.is-active
-.tree-node-rect {
-
-  fill: #25466b;
-
-  stroke: #91c8ff;
-  stroke-width: 2.3;
-
-  filter:
-    drop-shadow(
-      0 0 8px
-      rgba(89, 168, 255, 0.55)
-    );
+  position: relative;
+  width: 100%;
+  min-height: 520px;
+  padding: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
 }
 
+.tree-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
 
-.tree-node-group.is-active
+.tree-edge {
+  fill: none;
+  stroke: #607491;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  opacity: 0;
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  transition: opacity 220ms ease, stroke-dashoffset 480ms ease;
+}
+
+.tree-edge.is-visible {
+  opacity: 1;
+  stroke-dashoffset: 0;
+}
+
+.tree-node-group {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.94);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 280ms ease, transform 360ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.tree-node-group.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tree-node-rect {
+  fill: #17243a;
+  stroke: #6682a8;
+  stroke-width: 1.4;
+}
+
+.tree-node-group.is-base .tree-node-rect {
+  fill: #302719;
+  stroke: #c4933d;
+}
+
 .tree-node-text {
+  fill: #f8fafc;
+  font-family: var(--mono);
+  font-weight: 650;
+  dominant-baseline: middle;
+  text-anchor: middle;
+  pointer-events: none;
+}
 
+.tree-node-group.is-base .tree-node-text {
+  fill: #ffe0a0;
+}
+
+.tree-node-group.is-active .tree-node-rect {
+  fill: #25466b;
+  stroke: #91c8ff;
+  stroke-width: 2.3;
+  filter: drop-shadow(0 0 8px rgba(89, 168, 255, 0.55));
+}
+
+.tree-node-group.is-active .tree-node-text {
   fill: #ffffff;
 }
 
-
-/*
-  계산이 끝나고 return까지 완료된 함수
-*/
-.tree-node-group.is-done
-.tree-node-rect {
-
+.tree-node-group.is-done .tree-node-rect {
   fill: #1d332b;
-
   stroke: #69c795;
   stroke-width: 1.4;
 }
 
-
-.tree-node-group.is-done
-.tree-node-text {
-
+.tree-node-group.is-done .tree-node-text {
   fill: #c9f5dc;
 }
 
-
-/*
-  done 상태였더라도 caller가 다시 active가 되면
-  active 스타일을 우선시킨다.
-*/
-.tree-node-group.is-done.is-active
-.tree-node-rect {
-
+.tree-node-group.is-done.is-active .tree-node-rect {
   fill: #25466b;
-
   stroke: #91c8ff;
   stroke-width: 2.3;
 }
 
-/* =========================================================
-   FIB1 / FIB2 vertical layout
-   ========================================================= */
-
-   .comparison-grid.algorithm-stack {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 28px;
-    margin-top: 22px;
-  }
-  
-  .algorithm-stack .algorithm-window {
-    width: 100%;
-  }
-
-/* =========================================================
-   FIB2 array visualization
-   ========================================================= */
+.comparison-grid.algorithm-stack {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  margin-top: 22px;
+}
 
 .fib2-container {
   min-height: 250px;
   padding: 28px 22px;
 }
 
-
 .fib2-array-scroll {
   overflow-x: auto;
-
   width: 100%;
-
   padding: 12px 4px 22px;
 }
 
-
 .fib2-array {
   display: flex;
-
   width: max-content;
-
   margin: 0 auto;
 }
-
 
 .fib2-array-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-
   min-width: 72px;
 }
 
-
 .fib2-array-index {
   margin-bottom: 8px;
-
   color: var(--muted);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
+  font-family: var(--mono);
   font-size: 0.78rem;
 }
-
 
 .fib2-array-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 72px;
   height: 58px;
-
   color: var(--text);
-
   border-top: 1px solid #536887;
   border-bottom: 1px solid #536887;
   border-left: 1px solid #536887;
-
-  background:
-    rgba(20, 31, 50, 0.84);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
+  background: rgba(20, 31, 50, 0.84);
+  font-family: var(--mono);
   font-size: 1rem;
   font-weight: 800;
-
   opacity: 0.35;
-
-  transition:
-    background 280ms ease,
-    border-color 280ms ease,
-    opacity 280ms ease,
-    transform 280ms ease,
-    box-shadow 280ms ease;
+  transition: background 280ms ease, border-color 280ms ease, opacity 280ms ease, transform 280ms ease, box-shadow 280ms ease;
 }
 
-
-.fib2-array-item:last-child
-.fib2-array-cell {
+.fib2-array-item:last-child .fib2-array-cell {
   border-right: 1px solid #536887;
 }
-
 
 .fib2-array-cell.is-visible {
   opacity: 1;
 }
 
-
-/*
-  f[i-1], f[i-2]
-*/
 .fib2-array-cell.is-source {
   border-color: var(--accent);
-
-  background:
-    rgba(89, 168, 255, 0.16);
-
-  box-shadow:
-    inset 0 0 0 1px
-    rgba(89, 168, 255, 0.25);
+  background: rgba(89, 168, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(89, 168, 255, 0.25);
 }
 
-
-/*
-  새로 만들어진 f[i]
-*/
 .fib2-array-cell.is-result {
   border-color: var(--highlight);
-
-  background:
-    rgba(245, 184, 75, 0.16);
-
+  background: rgba(245, 184, 75, 0.16);
   transform: translateY(-4px);
-
-  box-shadow:
-    0 8px 20px
-    rgba(245, 184, 75, 0.12);
+  box-shadow: 0 8px 20px rgba(245, 184, 75, 0.12);
 }
 
-/* =========================================================
-   MERGE SORT INPUT
-   ========================================================= */
-
-   .sort-size-row {
-    display: grid;
-  
-    grid-template-columns:
-      90px
-      1fr;
-  
-    gap: 10px;
-  }
-  
-  
-  .sort-size-row input {
-    width: 100%;
-  
-    padding: 12px;
-  
-    color: var(--text);
-  
-    border:
-      1px solid #536887;
-  
-    border-radius: 6px;
-  
-    background:
-      #0c1321;
-  }
-  
-  
-  .sort-size-row button {
-    cursor: pointer;
-  
-    color: #07101d;
-  
-    border: 0;
-    border-radius: 6px;
-  
-    background:
-      linear-gradient(
-        135deg,
-        #8fc5ff,
-        #59a8ff
-      );
-  
-    font-weight: 800;
-  }
-  
-  
-  /* =========================================================
-     ARRAY EDITOR
-     ========================================================= */
-  
-  .sort-input-panel {
-    margin-top: 30px;
-  
-    padding: 22px;
-  
-    border:
-      1px solid
-      var(--line);
-  
-    border-radius: 9px;
-  
-    background:
-      rgba(
-        16,
-        24,
-        39,
-        0.9
-      );
-  }
-  
-  
-  .sort-array-inputs {
-    display: flex;
-  
-    flex-wrap: wrap;
-  
-    gap: 8px;
-  
-    margin-top: 18px;
-  }
-  
-  
-  .sort-input-cell-wrapper {
-    display: flex;
-  
-    flex-direction: column;
-  
-    align-items: center;
-  }
-  
-  
-  .sort-input-index {
-    margin-bottom: 5px;
-  
-    color:
-      var(--muted);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size:
-      0.72rem;
-  }
-  
-  
-  .sort-array-value {
-    width: 74px;
-    height: 58px;
-  
-    padding: 5px;
-  
-    color: var(--text);
-  
-    border: 1px solid #536887;
-    border-radius: 6px;
-  
-    background: #0c1422;
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 1.15rem;
-    font-weight: 800;
-  
-    text-align: center;
-  }
-  
-  
-  .sort-array-value:focus {
-    border-color:
-      var(--accent);
-  
-    outline:
-      2px solid
-      rgba(
-        89,
-        168,
-        255,
-        0.16
-      );
-  }
-  
-  
-  .sort-button-row {
-    display: flex;
-  
-    gap: 10px;
-  
-    margin-top: 20px;
-  }
-  
-  
-  .sort-button-row button {
-    cursor: pointer;
-  
-    padding:
-      12px
-      22px;
-  
-    border-radius: 6px;
-  
-    font-weight: 800;
-  }
-  
-  
-  .run-mergesort-button {
-    color:
-      #07101d;
-  
-    border: 0;
-  
-    background:
-      linear-gradient(
-        135deg,
-        #8fc5ff,
-        #59a8ff
-      );
-  }
-  
-  
-  .secondary-sort-button {
-    color:
-      var(--text);
-  
-    border:
-      1px solid
-      var(--line);
-  
-    background:
-      rgba(
-        255,
-        255,
-        255,
-        0.04
-      );
-  }
-  
-  
-  .sort-input-message {
-    min-height: 22px;
-  
-    margin:
-      10px
-      0
-      0;
-  
-    color:
-      var(--danger);
-  
-    font-size:
-      0.86rem;
-  }
-  
-  
-  /* =========================================================
-     SORT WINDOW
-     ========================================================= */
-  
-  .sort-code-window,
-  .sort-visualization-window {
-    margin-top: 24px;
-  }
-  
-  /* =========================================================
-     RECURSION TREE
-     ========================================================= */
-  
-  .merge-tree-container {
-    width: 100%;
-  
-    min-height: 420px;
-  
-    margin-top: 4px;
-  
-    padding:
-      24px;
-  
-    overflow-x: auto;
-  
-    border:
-      1px solid
-      var(--line-soft);
-  
-    border-radius: 7px;
-  
-    background:
-      #0c1422;
-  }
-  
-  
-  .merge-subtree {
-    display: flex;
-  
-    flex-direction: column;
-  
-    align-items: center;
-  
-    min-width: max-content;
-  }
-  
-  
-  .merge-child-row {
-    display: flex;
-  
-    justify-content: center;
-  
-    gap: 28px;
-  
-    margin-top: 32px;
-  }
-  
-  
-  .merge-node-card {
-    padding:
-      7px;
-  
-    opacity: 0;
-  
-    border:
-      1px solid
-      #536887;
-  
-    border-radius: 6px;
-  
-    background:
-      #17243a;
-  
-    transform:
-      translateY(-8px);
-  
-    transition:
-      opacity
-      250ms ease,
-      transform
-      300ms ease,
-      border-color
-      250ms ease,
-      background
-      250ms ease;
-  }
-  
-  
-  .merge-node-card.is-visible {
-    opacity: 1;
-  
-    transform:
-      translateY(0);
-  }
-  
-  
-  .merge-node-card.is-active {
-    border-color:
-      var(--accent);
-  
-    background:
-      rgba(
-        89,
-        168,
-        255,
-        0.14
-      );
-  }
-  
-  
-  .merge-node-card.is-base {
-    border-color:
-      var(--highlight);
-  
-    background:
-      rgba(
-        245,
-        184,
-        75,
-        0.12
-      );
-  }
-  
-  
-  .merge-node-card.is-merged {
-    border-color:
-      var(--success);
-  
-    background:
-      rgba(
-        99,
-        214,
-        160,
-        0.12
-      );
-  }
-  
-  
-  .merge-node-card.is-splitting {
-    border-color:
-      var(--highlight);
-  }
-  
-  
-  /* =========================================================
-     ARRAY CELLS
-     ========================================================= */
-  
-  .merge-value-row {
-    display: flex;
-  }
-  
-  
-  .merge-value-cell {
-    display: flex;
-  
-    align-items: center;
-    justify-content: center;
-  
-    min-width: 42px;
-    height: 38px;
-  
-    padding:
-      0
-      7px;
-  
-    color:
-      var(--text);
-  
-    border-top:
-      1px solid
-      #536887;
-  
-    border-bottom:
-      1px solid
-      #536887;
-  
-    border-left:
-      1px solid
-      #536887;
-  
-    background:
-      rgba(
-        20,
-        31,
-        50,
-        0.88
-      );
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size:
-      0.86rem;
-  
-    font-weight: 700;
-  
-    transition:
-      opacity
-      200ms ease,
-      background
-      200ms ease,
-      border-color
-      200ms ease;
-  }
-  
-  
-  .merge-value-cell:last-child {
-    border-right:
-      1px solid
-      #536887;
-  }
-  
-  
-/* =========================================================
-   MERGESORT INPUT
-   ========================================================= */
-
-   .sort-size-row {
-    display: grid;
-    grid-template-columns: 90px 1fr;
-    gap: 10px;
-  }
-  
-  
-  .sort-size-row input {
-    width: 100%;
-    padding: 12px;
-  
-    color: var(--text);
-  
-    border: 1px solid #536887;
-    border-radius: 6px;
-  
-    background: #0c1321;
-  }
-  
-  
-  .sort-size-row button {
-    cursor: pointer;
-  
-    color: #07101d;
-  
-    border: 0;
-    border-radius: 6px;
-  
-    background:
-      linear-gradient(
-        135deg,
-        #8fc5ff,
-        #59a8ff
-      );
-  
-    font-weight: 800;
-  }
-  
-  
-  /* =========================================================
-     ARRAY INPUT
-     ========================================================= */
-  
-  .sort-input-panel {
-    margin-top: 30px;
-    padding: 22px;
-  
-    border: 1px solid var(--line);
-    border-radius: 9px;
-  
-    background:
-      rgba(16, 24, 39, 0.9);
-  }
-  
-  
-  .sort-array-inputs {
-    display: flex;
-    flex-wrap: wrap;
-  
-    gap: 8px;
-  
-    margin-top: 18px;
-  }
-  
-  
-  .sort-input-cell-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  
-  .sort-input-index {
-    margin-bottom: 5px;
-  
-    color: var(--muted);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.72rem;
-  }
-  
-  
-  .sort-array-value {
-    width: 74px;
-    height: 58px;
-  
-    padding: 5px;
-  
-    color: var(--text);
-  
-    border: 1px solid #536887;
-    border-radius: 6px;
-  
-    background: #0c1422;
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 1.15rem;
-    font-weight: 800;
-  
-    text-align: center;
-  }
-  
-  
-  .sort-array-value:focus {
-    border-color: var(--accent);
-  
-    outline:
-      2px solid
-      rgba(89, 168, 255, 0.18);
-  }
-  
-  
-  /* =========================================================
-     BUTTONS
-     ========================================================= */
-  
-  .sort-button-row {
-    display: flex;
-    gap: 10px;
-  
-    margin-top: 20px;
-  }
-  
-  
-  .sort-button-row button {
-    cursor: pointer;
-  
-    padding: 12px 22px;
-  
-    border-radius: 6px;
-  
-    font-weight: 800;
-  }
-  
-  
-  .run-mergesort-button {
-    color: #07101d;
-  
-    border: 0;
-  
-    background:
-      linear-gradient(
-        135deg,
-        #8fc5ff,
-        #59a8ff
-      );
-  }
-  
-  
-  .secondary-sort-button {
-    color: var(--text);
-  
-    border: 1px solid var(--line);
-  
-    background:
-      rgba(255, 255, 255, 0.04);
-  }
-  
-  
-  .sort-input-message {
-    min-height: 22px;
-  
-    margin:
-      10px
-      0
-      0;
-  
-    color:
-      var(--danger, #ff8f9a);
-  
-    font-size:
-      0.86rem;
-  }
-  
-  
-  /* =========================================================
-     SORT WINDOWS
-     ========================================================= */
-  
-  .sort-code-window,
-  .sort-visualization-window {
-    margin-top: 24px;
-  }
-  
-  
-  .sort-visualization-window {
-    scroll-margin-top: 20px;
-  }
-  
-  
-  /* =========================================================
-     LIVE STATUS
-     ========================================================= */
-  
-  .sort-live-status {
-    display: grid;
-  
-    grid-template-columns:
-      0.8fr
-      0.6fr
-      0.8fr
-      2fr;
-  
-    gap: 10px;
-  
-    margin-bottom: 20px;
-  }
-  
-  
-  .sort-live-status > div {
-    padding: 11px 13px;
-  
-    border:
-      1px solid
-      var(--line-soft);
-  
-    border-radius: 6px;
-  
-    background:
-      rgba(255, 255, 255, 0.025);
-  }
-  
-  
-  .sort-live-status span,
-  .sort-live-status strong {
-    display: block;
-  }
-  
-  
-  .sort-live-status span {
-    color: var(--muted);
-  
-    font-size: 0.72rem;
-  
-    letter-spacing: 0.06em;
-  }
-  
-  
-  .sort-live-status strong {
-    margin-top: 5px;
-  
-    color: var(--text);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.9rem;
-  }
-  
-  
-  /* =========================================================
-     WHOLE MERGESORT DIAGRAM
-     ========================================================= */
-  
-  .merge-tree-container {
-    width: 100%;
-  
-    min-height: 520px;
-  
-    padding: 32px 24px 42px;
-  
-    overflow-x: auto;
-    overflow-y: hidden;
-  
-    border:
-      1px solid
-      var(--line-soft);
-  
-    border-radius: 7px;
-  
-    background:
-      linear-gradient(
-        rgba(121, 148, 183, 0.035) 1px,
-        transparent 1px
-      ),
-      linear-gradient(
-        90deg,
-        rgba(121, 148, 183, 0.035) 1px,
-        transparent 1px
-      ),
-      #0c1422;
-  
-    background-size:
-      22px 22px;
-  
-    scrollbar-gutter: stable;
-  }
-  
-  
-  /* =========================================================
-     RECURSIVE SUBTREE
-  
-             call
-              ↓
-            split
-            /   \
-         child child
-            \   /
-            merge
-              ↓
-           result
-     ========================================================= */
-  
-  .merge-subtree {
-    position: relative;
-  
-    display: flex;
-    flex-direction: column;
-  
-    align-items: center;
-  
-    min-width: max-content;
-  }
-  
-  
-  /* =========================================================
-     CHILD ROW
-     ========================================================= */
-  
-  .merge-child-row {
-    position: relative;
-  
-    display: flex;
-  
-    align-items: flex-start;
-    justify-content: center;
-  
-    gap: 26px;
-  
-    margin-top: 6px;
-  
-    padding-top: 16px;
-  }
-  
-  
-  /*
-    split 이전에는 branch line 숨김
-  */
-  
-  .merge-child-row::before {
-    content: "";
-  
-    position: absolute;
-  
-    top: 0;
-  
-    left: 24%;
-    right: 24%;
-  
-    border-top:
-      2px dashed
-      rgba(255, 154, 154, 0.72);
-  
-    opacity: 0;
-  
-    transition:
-      opacity 300ms ease;
-  }
-  
-  
-  .merge-child-row.is-visible::before {
-    opacity: 1;
-  }
-  
-  
-  /*
-    각 child로 내려오는 짧은 vertical branch
-  */
-  
-  .merge-child-row >
-  .merge-subtree::before {
-    content: "";
-  
-    position: absolute;
-  
-    top: -16px;
-    left: 50%;
-  
-    height: 16px;
-  
-    border-left:
-      2px dashed
-      rgba(255, 154, 154, 0.72);
-  
-    opacity: 0;
-  
-    transition:
-      opacity 300ms ease;
-  }
-  
-  
-  .merge-child-row.is-visible >
-  .merge-subtree::before {
-    opacity: 1;
-  }
-  
-  
-  /* =========================================================
-     FLOW ARROWS
-     ========================================================= */
-  
-  .sort-flow {
-    display: flex;
-  
-    align-items: center;
-    justify-content: center;
-  
-    gap: 14px;
-  
-    min-height: 38px;
-  
-    opacity: 0;
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.76rem;
-    font-weight: 800;
-  
-    letter-spacing: 0.06em;
-  
-    transition:
-      opacity 300ms ease,
-      transform 300ms ease;
-  }
-  
-  
-  .sort-flow.is-visible {
-    opacity: 0.75;
-  }
-  
-  
-  .sort-flow.is-active {
-    opacity: 1;
-  
-    transform:
-      scale(1.05);
-  }
-  
-  
-  .sort-flow-arrow {
-    font-size: 1.3rem;
-    line-height: 1;
-  }
-  
-  
-  /* SPLIT = PPT의 red/pink 계열 */
-  
-  .split-flow {
-    color: #ff9a9a;
-  }
-  
-  
-  /* MERGE = PPT의 blue 계열 */
-  
-  .merge-flow {
-    margin-top: 10px;
-  
-    color: #8fc5ff;
-  }
-  
-  
-  .merge-flow.is-visible {
-    opacity: 0.9;
-  }
-  
-  
-  /* =========================================================
-     NODE CARD
-     ========================================================= */
-  
-  .merge-node-card {
-    position: relative;
-  
-    padding:
-      8px
-      9px
-      10px;
-  
-    opacity: 0;
-  
-    border:
-      1px solid
-      #536887;
-  
-    border-radius: 7px;
-  
-    background:
-      #17243a;
-  
-    transform:
-      translateY(-7px);
-  
-    transition:
-      opacity 300ms ease,
-      transform 340ms ease,
-      border-color 260ms ease,
-      background 260ms ease,
-      box-shadow 260ms ease;
-  }
-  
-  
-  .merge-node-card.is-visible {
-    opacity: 1;
-  
-    transform:
-      translateY(0);
-  }
-  
-  
-  /* 현재 step */
-  
-  .merge-node-card.is-active {
-    border-color:
-      var(--highlight, #f5b84b);
-  
-    box-shadow:
-      0 0 0 2px
-      rgba(245, 184, 75, 0.14);
-  }
-  
-  
-  /* 현재 split node */
-  
-  .merge-node-card.is-splitting {
-    border-color: #ff9a9a;
-  
-    background:
-      rgba(255, 154, 154, 0.10);
-  }
-  
-  
-  /* base case */
-  
-  .merge-node-card.is-base {
-    border-color:
-      var(--highlight, #f5b84b);
-  
-    background:
-      rgba(245, 184, 75, 0.10);
-  }
-  
-  
-  /* child merge source */
-  
-  .merge-node-card.is-merge-source {
-    border-color: #8fc5ff;
-  
-    box-shadow:
-      0 0 0 1px
-      rgba(143, 197, 255, 0.18);
-  }
-  
-  
-  /* 현재 merge 결과를 만들고 있는 node */
-  
-  .merge-result-card.is-merging {
-    border-color: #8fc5ff;
-  
-    background:
-      rgba(143, 197, 255, 0.08);
-  }
-  
-  
-  /* merge 완료 */
-  
-  .merge-result-card.is-merged {
-    border-color:
-      var(--success, #63d6a0);
-  
-    background:
-      rgba(99, 214, 160, 0.10);
-  }
-  
-  
-  /* =========================================================
-     NODE TEXT
-     ========================================================= */
-  
-  .merge-node-header {
-    margin-bottom: 6px;
-  
-    color: var(--muted);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.69rem;
-  
-    letter-spacing: 0.04em;
-  
-    text-align: center;
-  }
-  
-  
-  .merge-node-body {
-    display: flex;
-  
-    justify-content: center;
-  }
-  
-  
-  .merge-node-note {
-    min-height: 17px;
-  
-    margin-top: 7px;
-  
-    color:
-      var(--text-soft);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.68rem;
-  
-    text-align: center;
-  }
-  
-  
-  /* =========================================================
-     ARRAY CELLS
-     ========================================================= */
-  
-  .merge-value-row {
-    display: flex;
-  
-    align-items: center;
-  
-    width: max-content;
-  }
-  
-  
-  .merge-value-cell {
-    display: flex;
-  
-    align-items: center;
-    justify-content: center;
-  
-    min-width: 44px;
-    height: 40px;
-  
-    padding:
-      0
-      7px;
-  
-    color:
-      var(--text);
-  
-    border-top:
-      1px solid
-      #536887;
-  
-    border-bottom:
-      1px solid
-      #536887;
-  
-    border-left:
-      1px solid
-      #536887;
-  
-    background:
-      rgba(20, 31, 50, 0.90);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.9rem;
-    font-weight: 750;
-  
-    transition:
-      opacity 220ms ease,
-      color 220ms ease,
-      background 220ms ease,
-      border-color 220ms ease,
-      transform 220ms ease,
-      box-shadow 220ms ease,
-      font-size 220ms ease;
-  }
-  
-  
-  .merge-value-cell:last-child {
-    border-right:
-      1px solid
-      #536887;
-  }
-  
-  
-  /* =========================================================
-     SPLIT POINT
-  
-     [ ... ] ║ [ ... ]
-     ========================================================= */
-  
-  .merge-split-divider {
-    width: 0;
-    height: 36px;
-  
-    margin:
-      0
-      6px;
-  
-    border-left:
-      2px dashed
-      rgba(255, 154, 154, 0.48);
-  
-    transition:
-      border-color 250ms ease,
-      filter 250ms ease,
-      transform 250ms ease;
-  }
-  
-  
-  /* 현재 split 지점 */
-  
-  .merge-split-divider.is-active {
-    border-left:
-      3px solid
-      #ff9a9a;
-  
-    transform:
-      scaleY(1.18);
-  
-    filter:
-      drop-shadow(
-        0 0 5px
-        rgba(255, 154, 154, 0.6)
-      );
-  }
-  
-  
-  /* =========================================================
-     MERGE OUTPUT
-     ========================================================= */
-  
-     .merge-output-row
-     .merge-value-cell {
-       min-width: 48px;
-       height: 44px;
-     
-       padding:
-         0
-         8px;
-     
-       color: transparent;
-     
-       border-style: dashed;
-     
-       background:
-         rgba(143, 197, 255, 0.025);
-     
-       font-size: 1rem;
-       font-weight: 800;
-     }
-  
-  
-  /* 다음 값이 들어갈 위치 */
-  
-  .merge-output-row
-  .merge-value-cell.is-next-output {
-    border-color: #8fc5ff;
-  
-    background:
-      rgba(143, 197, 255, 0.12);
-  
-    box-shadow:
-      inset
-      0
-      0
-      0
-      1px
-      rgba(143, 197, 255, 0.20);
-  }
-  
-  
-  /* 값이 실제로 들어온 cell */
-  
-  .merge-output-row
-  .merge-value-cell.is-filled {
-    color: var(--text);
-  
-    border-style: solid;
-  
-    border-color:
-      var(--success, #63d6a0);
-  
-    background:
-      rgba(99, 214, 160, 0.10);
-  }
-  
-  
-  /* =========================================================
-     COMPARE
-     ========================================================= */
-  
-    .merge-value-cell.is-comparing {
-    position: relative;
-    z-index: 5;
-    
-    color: #07101d;
-    
-    border-color:
-        var(--highlight, #f5b84b);
-    
-    background:
-        var(--highlight, #f5b84b);
-    
-    font-size: 1.15rem;
-    font-weight: 900;
-    
-    transform:
-        translateY(-5px)
-        scale(1.10);
-    
-    box-shadow:
-        0 7px 18px
-        rgba(245, 184, 75, 0.28);
-    }
-  
-  /* 실제로 선택된 source */
-  
-  .merge-value-cell.is-moving-source {
-    border-color: #8fc5ff;
-  
-    background:
-      rgba(143, 197, 255, 0.18);
-  }
-  
-  
-  /*
-    이미 output으로 이동한 원소
-  */
-  
-  .merge-value-cell.is-used {
-    opacity: 0.28;
-  }
-  
-  
-  /* =========================================================
-     MOVING GHOST
-  
-     실제 cell이 child에서
-     아래쪽 merge-result node로 이동
-     ========================================================= */
-  
-    .merge-moving-cell {
-    position: fixed;
-    
-    z-index: 9999;
-    
-    pointer-events: none;
-    
-    margin: 0;
-    
-    opacity: 1;
-    
-    color: #07101d;
-    
-    border:
-        1px solid
-        #8fc5ff;
-    
-    background:
-        #8fc5ff;
-    
-    font-size: 1.15rem;
-    font-weight: 900;
-    
-    box-shadow:
-        0 5px 18px
-        rgba(143, 197, 255, 0.28);
-    
-    transition:
-        transform
-        800ms
-        cubic-bezier(
-        0.2,
-        0.75,
-        0.25,
-        1
-        );
-    }
-  
-  
-  /* =========================================================
-     PLACEHOLDER
-     ========================================================= */
-  
-  .visualization-placeholder {
-    display: flex;
-  
-    align-items: center;
-    justify-content: center;
-  
-    min-height: 220px;
-  
-    color: var(--muted);
-  
-    font-family:
-      "Cascadia Code",
-      Consolas,
-      monospace;
-  
-    font-size: 0.88rem;
-  
-    text-align: center;
-  }
-  
-  
-  /* =========================================================
-     RESPONSIVE
-     ========================================================= */
-  
-  @media (max-width: 760px) {
-  
-    .sort-live-status {
-      grid-template-columns:
-        repeat(
-          2,
-          minmax(0, 1fr)
-        );
-    }
-  
-  
-    .merge-child-row {
-      gap: 14px;
-    }
-  
-  
-    .merge-value-cell {
-      min-width: 32px;
-  
-      height: 31px;
-  
-      padding:
-        0
-        4px;
-  
-      font-size: 0.72rem;
-    }
-  
-  
-    .merge-split-divider {
-      height: 32px;
-  
-      margin:
-        0
-        4px;
-    }
-  
-  }
-
-  /* =========================================================
-   GRAPH BUILDER
-   ========================================================= */
-
-.graph-builder-window {
-  margin-top: 26px;
+.merge-tree-container {
+  width: 100%;
+  min-height: 520px;
+  margin-top: 4px;
+  padding: 32px 24px 42px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background:
+    linear-gradient(rgba(121, 148, 183, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(121, 148, 183, 0.035) 1px, transparent 1px),
+    #0c1422;
+  background-size: 22px 22px;
+  scrollbar-gutter: stable;
 }
 
-
-.graph-toolbar {
+.merge-subtree {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
-
-  gap: 8px;
-
-  margin-bottom: 12px;
+  flex-direction: column;
+  align-items: center;
+  min-width: max-content;
 }
 
-
-.graph-tool-button {
-  cursor: pointer;
-
-  padding:
-    9px
-    15px;
-
-  color:
-    var(--text-soft);
-
-  border:
-    1px solid
-    var(--line);
-
-  border-radius:
-    6px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.035
-    );
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.78rem;
-
-  font-weight:
-    800;
-
-  transition:
-    border-color 180ms ease,
-    background 180ms ease,
-    color 180ms ease;
+.merge-child-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 26px;
+  margin-top: 6px;
+  padding-top: 16px;
 }
 
-
-.graph-tool-button:hover:not(:disabled) {
-  border-color:
-    var(--accent);
+.merge-child-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 24%;
+  right: 24%;
+  border-top: 2px dashed rgba(255, 154, 154, 0.72);
+  opacity: 0;
+  transition: opacity 300ms ease;
 }
 
-
-.graph-tool-button.is-active {
-  color:
-    #07101d;
-
-  border-color:
-    var(--accent);
-
-  background:
-    var(--accent);
+.merge-child-row.is-visible::before {
+  opacity: 1;
 }
 
-
-.graph-tool-button:disabled {
-  cursor:
-    not-allowed;
-
-  opacity:
-    0.35;
+.merge-child-row > .merge-subtree::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  height: 16px;
+  border-left: 2px dashed rgba(255, 154, 154, 0.72);
+  opacity: 0;
+  transition: opacity 300ms ease;
 }
 
-
-.graph-clear-button {
-  margin-left:
-    auto;
-
-  color:
-    var(--danger);
+.merge-child-row.is-visible > .merge-subtree::before {
+  opacity: 1;
 }
 
-
-/* =========================================================
-   GRAPH MESSAGE
-   ========================================================= */
-
-.graph-builder-message {
-  min-height:
-    21px;
-
-  margin:
-    7px
-    0
-    12px;
-
-  color:
-    var(--text-soft);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.8rem;
+.sort-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 38px;
+  opacity: 0;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: opacity 300ms ease, transform 300ms ease;
 }
 
-
-/* =========================================================
-   CANVAS
-   ========================================================= */
-
-.graph-canvas-wrapper {
-  overflow:
-    hidden;
-
-  border:
-    1px solid
-    var(--line-soft);
-
-  border-radius:
-    8px;
-
-  background:
-    #0b1322;
+.sort-flow.is-visible {
+  opacity: 0.75;
 }
 
-
-.graph-canvas {
-  display:
-    block;
-
-  width:
-    100%;
-
-  aspect-ratio:
-    5 / 3;
-
-  cursor:
-    crosshair;
-
-  background:
-    radial-gradient(
-      circle,
-      rgba(148, 163, 184, 0.11) 1px,
-      transparent 1.3px
-    );
-
-  background-size:
-    22px 22px;
-
-  touch-action:
-    none;
-
-  user-select:
-    none;
+.sort-flow.is-active {
+  opacity: 1;
+  transform: scale(1.05);
 }
 
-
-.graph-hint {
-  margin:
-    10px
-    0
-    0;
-
-  color:
-    var(--muted);
-
-  font-size:
-    0.76rem;
+.sort-flow-arrow {
+  font-size: 1.3rem;
+  line-height: 1;
 }
 
+.split-flow {
+  color: #ff9a9a;
+}
 
-/* =========================================================
-   EDGES
-   ========================================================= */
+.merge-flow {
+  margin-top: 10px;
+  color: #8fc5ff;
+}
+
+.merge-flow.is-visible {
+  opacity: 0.9;
+}
+
+.merge-node-card {
+  position: relative;
+  padding: 8px 9px 10px;
+  opacity: 0;
+  border: 1px solid #536887;
+  border-radius: 7px;
+  background: #17243a;
+  transform: translateY(-7px);
+  transition: opacity 300ms ease, transform 340ms ease, border-color 260ms ease, background 260ms ease, box-shadow 260ms ease;
+}
+
+.merge-node-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.merge-node-card.is-active {
+  border-color: var(--highlight);
+  box-shadow: 0 0 0 2px rgba(245, 184, 75, 0.14);
+}
+
+.merge-node-card.is-splitting {
+  border-color: #ff9a9a;
+  background: rgba(255, 154, 154, 0.1);
+}
+
+.merge-node-card.is-base {
+  border-color: var(--highlight);
+  background: rgba(245, 184, 75, 0.1);
+}
+
+.merge-node-card.is-merge-source {
+  border-color: #8fc5ff;
+  box-shadow: 0 0 0 1px rgba(143, 197, 255, 0.18);
+}
+
+.merge-result-card.is-merging {
+  border-color: #8fc5ff;
+  background: rgba(143, 197, 255, 0.08);
+}
+
+.merge-result-card.is-merged {
+  border-color: var(--success);
+  background: rgba(99, 214, 160, 0.1);
+}
+
+.merge-node-header {
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.merge-node-body {
+  display: flex;
+  justify-content: center;
+}
+
+.merge-node-note {
+  min-height: 17px;
+  margin-top: 7px;
+  color: var(--text-soft);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  text-align: center;
+}
+
+.merge-value-row {
+  display: flex;
+  align-items: center;
+  width: max-content;
+}
+
+.merge-value-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 40px;
+  padding: 0 7px;
+  color: var(--text);
+  border-top: 1px solid #536887;
+  border-bottom: 1px solid #536887;
+  border-left: 1px solid #536887;
+  background: rgba(20, 31, 50, 0.9);
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  font-weight: 750;
+  transition: opacity 220ms ease, color 220ms ease, background 220ms ease, border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+}
+
+.merge-value-cell:last-child {
+  border-right: 1px solid #536887;
+}
+
+.merge-split-divider {
+  width: 0;
+  height: 36px;
+  margin: 0 6px;
+  border-left: 2px dashed rgba(255, 154, 154, 0.48);
+  transition: border-color 250ms ease, filter 250ms ease, transform 250ms ease;
+}
+
+.merge-split-divider.is-active {
+  border-left: 3px solid #ff9a9a;
+  transform: scaleY(1.18);
+  filter: drop-shadow(0 0 5px rgba(255, 154, 154, 0.6));
+}
+
+.merge-output-row .merge-value-cell {
+  min-width: 48px;
+  height: 44px;
+  padding: 0 8px;
+  color: transparent;
+  border-style: dashed;
+  background: rgba(143, 197, 255, 0.025);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.merge-output-row .merge-value-cell.is-next-output {
+  border-color: #8fc5ff;
+  background: rgba(143, 197, 255, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(143, 197, 255, 0.2);
+}
+
+.merge-output-row .merge-value-cell.is-filled {
+  color: var(--text);
+  border-style: solid;
+  border-color: var(--success);
+  background: rgba(99, 214, 160, 0.1);
+}
+
+.merge-value-cell.is-comparing {
+  position: relative;
+  z-index: 5;
+  color: #07101d;
+  border-color: var(--highlight);
+  background: var(--highlight);
+  font-size: 1.15rem;
+  font-weight: 900;
+  transform: translateY(-5px) scale(1.1);
+  box-shadow: 0 7px 18px rgba(245, 184, 75, 0.28);
+}
+
+.merge-value-cell.is-moving-source {
+  border-color: #8fc5ff;
+  background: rgba(143, 197, 255, 0.18);
+}
+
+.merge-value-cell.is-used {
+  opacity: 0.28;
+}
+
+.merge-moving-cell {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  margin: 0;
+  color: #07101d;
+  border: 1px solid #8fc5ff;
+  background: #8fc5ff;
+  font-size: 1.15rem;
+  font-weight: 900;
+  box-shadow: 0 5px 18px rgba(143, 197, 255, 0.28);
+  transition: transform 800ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
 
 .graph-edge-hit {
-  stroke:
-    transparent;
-
-  stroke-width:
-    18;
-
-  cursor:
-    pointer;
+  stroke: transparent;
+  stroke-width: 18;
+  cursor: pointer;
 }
-
 
 .graph-edge-line {
-  stroke:
-    #62708a;
-
-  stroke-width:
-    2.2;
-
-  transition:
-    stroke 220ms ease,
-    stroke-width 220ms ease,
-    opacity 220ms ease;
+  stroke: #62708a;
+  stroke-width: 2.2;
+  transition: stroke 220ms ease, stroke-width 220ms ease, opacity 220ms ease;
 }
-
 
 .graph-edge-weight-box {
-  fill:
-    #0b1322;
-
-  stroke:
-    #45536d;
-
-  stroke-width:
-    1;
+  fill: #0b1322;
+  stroke: #45536d;
+  stroke-width: 1;
 }
-
 
 .graph-edge-weight {
-  fill:
-    var(--text-soft);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    15px;
-
-  font-weight:
-    800;
-
-  pointer-events:
-    none;
+  fill: var(--text-soft);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 800;
+  pointer-events: none;
 }
 
-
-/* currently relaxed edge */
-
-.graph-edge.is-relaxing
-.graph-edge-line {
-  stroke:
-    var(--highlight);
-
-  stroke-width:
-    5;
+.graph-edge.is-relaxing .graph-edge-line {
+  stroke: var(--highlight);
+  stroke-width: 5;
 }
 
-
-/* shortest path tree */
-
-.graph-edge.is-tree-edge
-.graph-edge-line {
-  stroke:
-    #8fc5ff;
-
-  stroke-width:
-    4;
+.graph-edge.is-tree-edge .graph-edge-line {
+  stroke: #8fc5ff;
+  stroke-width: 4;
 }
 
-
-/* selected shortest path */
-
-.graph-edge.is-path-edge
-.graph-edge-line {
-  stroke:
-    var(--success);
-
-  stroke-width:
-    6;
+.graph-edge.is-path-edge .graph-edge-line {
+  stroke: var(--success);
+  stroke-width: 6;
 }
-
-
-/* =========================================================
-   GRAPH NODES
-   ========================================================= */
 
 .graph-node {
-  cursor:
-    pointer;
+  cursor: pointer;
 }
-
 
 .graph-node-circle {
-  fill:
-    #17243a;
-
-  stroke:
-    #6d7e9a;
-
-  stroke-width:
-    2.5;
-
-  transition:
-    fill 220ms ease,
-    stroke 220ms ease,
-    stroke-width 220ms ease,
-    filter 220ms ease;
+  fill: #17243a;
+  stroke: #6d7e9a;
+  stroke-width: 2.5;
+  transition: fill 220ms ease, stroke 220ms ease, stroke-width 220ms ease, filter 220ms ease;
 }
-
 
 .graph-node-label {
-  fill:
-    var(--text);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    18px;
-
-  font-weight:
-    900;
-
-  pointer-events:
-    none;
+  fill: var(--text);
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 900;
+  pointer-events: none;
 }
-
 
 .graph-node-distance {
-  fill:
-    var(--muted);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    14px;
-
-  font-weight:
-    800;
-
-  pointer-events:
-    none;
-
-  transition:
-    fill 200ms ease,
-    font-size 200ms ease,
-    font-weight 200ms ease;
+  fill: var(--muted);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 800;
+  pointer-events: none;
+  transition: fill 200ms ease, font-size 200ms ease, font-weight 200ms ease;
 }
 
-
-/* source */
-
-.graph-node.is-source
-.graph-node-circle {
-  stroke:
-    #ff9a9a;
-
-  stroke-width:
-    4;
+.graph-node.is-source .graph-node-circle {
+  stroke: #ff9a9a;
+  stroke-width: 4;
 }
 
-
-/* first endpoint when creating an edge */
-
-.graph-node.is-edge-start
-.graph-node-circle {
-  stroke:
-    var(--highlight);
-
-  stroke-width:
-    5;
-
-  filter:
-    drop-shadow(
-      0 0 6px
-      rgba(245, 184, 75, 0.45)
-    );
+.graph-node.is-edge-start .graph-node-circle {
+  stroke: var(--highlight);
+  stroke-width: 5;
+  filter: drop-shadow(0 0 6px rgba(245, 184, 75, 0.45));
 }
 
-
-/* tentative distance exists */
-
-.graph-node.is-frontier
-.graph-node-circle {
-  fill:
-    rgba(
-      245,
-      184,
-      75,
-      0.14
-    );
-
-  stroke:
-    var(--highlight);
+.graph-node.is-frontier .graph-node-circle {
+  fill: rgba(245, 184, 75, 0.14);
+  stroke: var(--highlight);
 }
 
-
-/* finalized */
-
-.graph-node.is-finalized
-.graph-node-circle {
-  fill:
-    rgba(
-      89,
-      168,
-      255,
-      0.18
-    );
-
-  stroke:
-    #8fc5ff;
-
-  stroke-width:
-    4;
+.graph-node.is-finalized .graph-node-circle {
+  fill: rgba(89, 168, 255, 0.18);
+  stroke: #8fc5ff;
+  stroke-width: 4;
 }
 
-
-/* currently selected deletemin */
-
-.graph-node.is-current
-.graph-node-circle {
-  stroke:
-    var(--highlight);
-
-  stroke-width:
-    6;
-
-  filter:
-    drop-shadow(
-      0 0 7px
-      rgba(245, 184, 75, 0.55)
-    );
+.graph-node.is-current .graph-node-circle {
+  stroke: var(--highlight);
+  stroke-width: 6;
+  filter: drop-shadow(0 0 7px rgba(245, 184, 75, 0.55));
 }
 
-
-/* relaxation target */
-
-.graph-node.is-relax-target
-.graph-node-circle {
-  stroke:
-    var(--highlight);
-
-  stroke-width:
-    5;
+.graph-node.is-relax-target .graph-node-circle {
+  stroke: var(--highlight);
+  stroke-width: 5;
 }
 
-
-/* selected final target */
-
-.graph-node.is-target
-.graph-node-circle {
-  stroke:
-    var(--success);
-
-  stroke-width:
-    5;
+.graph-node.is-target .graph-node-circle {
+  stroke: var(--success);
+  stroke-width: 5;
 }
-
-
-/* dist changed */
 
 .graph-node-distance.is-updated {
-  fill:
-    var(--success);
-
-  font-size:
-    18px;
-
-  font-weight:
-    900;
+  fill: var(--success);
+  font-size: 18px;
+  font-weight: 900;
 }
 
-
-/* =========================================================
-   RUN CONTROLS
-   ========================================================= */
-
-.dijkstra-run-controls {
-  display:
-    flex;
-
-  flex-wrap:
-    wrap;
-
-  gap:
-    10px;
-
-  margin-top:
-    20px;
-}
-
-
-.dijkstra-run-controls button {
-  cursor:
-    pointer;
-
-  padding:
-    12px
-    20px;
-
-  border-radius:
-    6px;
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-weight:
-    900;
-
-  transition:
-    transform 160ms ease,
-    filter 160ms ease,
-    opacity 160ms ease;
-}
-
-
-.dijkstra-run-controls button:hover:not(:disabled) {
-  filter:
-    brightness(1.08);
-}
-
-
-.dijkstra-run-controls button:active:not(:disabled) {
-  transform:
-    translateY(1px);
-}
-
-
-.dijkstra-run-controls button:disabled {
-  cursor:
-    not-allowed;
-
-  opacity:
-    0.35;
-}
-
-
-.dijkstra-auto-button {
-  color:
-    #07101d;
-
-  border:
-    1px solid
-    #8fc5ff;
-
-  background:
-    #8fc5ff;
-}
-
-
-.dijkstra-interactive-button {
-  color:
-    #111308;
-
-  border:
-    1px solid
-    var(--highlight);
-
-  background:
-    var(--highlight);
-}
-
-
-.dijkstra-reset-button {
-  color:
-    var(--text);
-
-  border:
-    1px solid
-    var(--line);
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.035
-    );
-}
-
-
-/* =========================================================
-   EXECUTION
-   ========================================================= */
-
-.dijkstra-execution-window {
-  margin-top:
-    24px;
-}
-
-.dijkstra-code-window {
-  margin-top:
-    24px;
-}
-
-.dijkstra-execution-grid {
-  display:
-    grid;
-
-  grid-template-columns:
-    minmax(220px, 0.8fr)
-    minmax(320px, 1.4fr);
-
-  gap:
-    22px;
-}
-
-
-/* =========================================================
-   PRIORITY QUEUE
-   ========================================================= */
-
-.priority-queue-panel {
-  min-width:
-    0;
-}
-
-
-.priority-queue {
-  display:
-    flex;
-
-  flex-direction:
-    column;
-
-  gap:
-    7px;
-
-  min-height:
-    240px;
-
-  padding:
-    14px;
-
-  border:
-    1px solid
-    var(--line-soft);
-
-  border-radius:
-    7px;
-
-  background:
-    #0c1422;
-}
-
-
-.pq-placeholder {
-  display:
-    flex;
-
-  align-items:
-    center;
-
-  justify-content:
-    center;
-
-  flex:
-    1;
-
-  color:
-    var(--muted);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.78rem;
-
-  text-align:
-    center;
-}
-
-
-.pq-entry {
-  position:
-    relative;
-
-  display:
-    grid;
-
-  grid-template-columns:
-    1fr
-    auto;
-
-  align-items:
-    center;
-
-  gap:
-    10px;
-
-  width:
-    100%;
-
-  padding:
-    10px
-    12px;
-
-  color:
-    var(--text);
-
-  border:
-    1px solid
-    #45536d;
-
-  border-radius:
-    6px;
-
-  background:
-    #17243a;
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  text-align:
-    left;
-
-  transition:
-    border-color 200ms ease,
-    background 200ms ease,
-    transform 200ms ease;
-}
-
-
-.pq-entry:not(:disabled) {
-  cursor:
-    pointer;
-}
-
-
-.pq-entry:not(:disabled):hover {
-  border-color:
-    var(--highlight);
-
-  transform:
-    translateX(3px);
-}
-
-
-.pq-entry:disabled {
-  opacity:
-    1;
-}
-
-
-.pq-entry.is-min {
-  border-color:
-    var(--highlight);
-
-  background:
-    rgba(
-      245,
-      184,
-      75,
-      0.08
-    );
-}
-
-
-.pq-node-name {
-  font-size:
-    0.92rem;
-
-  font-weight:
-    900;
-}
-
-
-.pq-node-distance {
-  font-size:
-    0.9rem;
-
-  font-weight:
-    800;
-}
-
-
-.pq-min-badge {
-  position:
-    absolute;
-
-  top:
-    -7px;
-
-  right:
-    7px;
-
-  padding:
-    1px
-    5px;
-
-  color:
-    #111308;
-
-  border-radius:
-    999px;
-
-  background:
-    var(--highlight);
-
-  font-size:
-    0.56rem;
-
-  font-weight:
-    900;
-}
-
-
-/* =========================================================
-   OPERATION
-   ========================================================= */
-
-.dijkstra-operation-panel {
-  min-width:
-    0;
-}
-
-
-.dijkstra-operation-box {
-  min-height:
-    180px;
-
-  padding:
-    18px;
-
-  border:
-    1px solid
-    var(--line-soft);
-
-  border-radius:
-    7px;
-
-  background:
-    #0c1422;
-}
-
-
-.current-operation-title {
-  color:
-    var(--highlight);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.9rem;
-
-  font-weight:
-    900;
-
-  letter-spacing:
-    0.04em;
-}
-
-
-.current-operation-detail {
-  margin-top:
-    12px;
-
-  color:
-    var(--text);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.9rem;
-
-  line-height:
-    1.7;
-
-  white-space:
-    pre-line;
-}
-
-
-/* =========================================================
-   UPDATE / KEEP
-   ========================================================= */
-
-.relax-decision-controls {
-  display:
-    flex;
-
-  gap:
-    10px;
-
-  margin-top:
-    18px;
-}
-
-
-.relax-decision-controls.is-hidden {
-  display:
-    none;
-}
-
-
-.relax-decision-controls button {
-  cursor:
-    pointer;
-
-  min-width:
-    110px;
-
-  padding:
-    10px
-    18px;
-
-  border-radius:
-    6px;
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-weight:
-    900;
-}
-
-
-#relax-update-button {
-  color:
-    #07101d;
-
-  border:
-    1px solid
-    var(--success);
-
-  background:
-    var(--success);
-}
-
-
-#relax-keep-button {
-  color:
-    var(--text);
-
-  border:
-    1px solid
-    var(--line);
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.04
-    );
-}
-
-
-/* =========================================================
-   FEEDBACK
-   ========================================================= */
-
-.dijkstra-feedback {
-  min-height:
-    22px;
-
-  margin-top:
-    13px;
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.8rem;
-
-  font-weight:
-    800;
-}
-
-
-.dijkstra-feedback.is-correct {
-  color:
-    var(--success);
-}
-
-
-.dijkstra-feedback.is-wrong {
-  color:
-    var(--danger);
-}
-
-
-/* =========================================================
-   LOG
-   ========================================================= */
-
-.dijkstra-log-label {
-  margin-top:
-    18px;
-}
-
-
-.dijkstra-log {
-  max-height:
-    220px;
-
-  overflow-y:
-    auto;
-
-  padding:
-    12px;
-
-  border:
-    1px solid
-    var(--line-soft);
-
-  border-radius:
-    7px;
-
-  background:
-    #0a111d;
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.76rem;
-
-  line-height:
-    1.65;
-}
-
-
-.dijkstra-log-empty {
-  color:
-    var(--muted);
-}
-
-
-.dijkstra-log-line {
-  padding:
-    3px
-    0;
-
-  color:
-    var(--text-soft);
-
-  border-bottom:
-    1px solid
-    rgba(
-      148,
-      163,
-      184,
-      0.08
-    );
-}
-
-
-/* =========================================================
-   CODE
-   ========================================================= */
-
-.dijkstra-code {
-  margin:
-    0;
-
-  overflow-x:
-    auto;
-
-  color:
-    var(--text-soft);
-
-  font-family:
-    "Cascadia Code",
-    Consolas,
-    monospace;
-
-  font-size:
-    0.86rem;
-
-  line-height:
-    1.7;
-}
-
-
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
-
-@media (max-width: 820px) {
-
-  .dijkstra-execution-grid {
-    grid-template-columns:
-      1fr;
+@media (prefers-reduced-motion: reduce) {
+  .tree-edge,
+  .tree-node-group,
+  .dp-row {
+    transition: none;
   }
 
-
-  .graph-clear-button {
-    margin-left:
-      0;
+  .dp-row.is-visible .dp-cell {
+    animation: none;
   }
-
-
-  .graph-canvas {
-    min-height:
-      380px;
-  }
-
 }
 
-.code-function-title {
-  text-decoration-line: underline;
-  text-decoration-color: var(--accent);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
+@media (max-width: 760px) {
+  .merge-child-row {
+    gap: 14px;
+  }
 
-  font-weight: 800;
+  .merge-value-cell {
+    min-width: 32px;
+    height: 31px;
+    padding: 0 4px;
+    font-size: 0.72rem;
+  }
+
+  .merge-split-divider {
+    height: 32px;
+    margin: 0 4px;
+  }
 }

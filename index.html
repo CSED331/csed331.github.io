@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,7 @@
       </div>
       <div class="system-meta">
         <span>SEMESTER 2026-2</span>
-        <span id="system-clock" aria-label="현재 시각"></span>
+        <span id="system-clock" aria-label="current time"></span>
       </div>
     </header>
 
@@ -43,34 +43,33 @@
           </div>
         </section>
 
-          <div class="menu-grid">
-            <a class="menu-card active-card" href="fibonacci.html">
-              <span class="card-index">01</span>
-              <span class="card-icon">FIB(n)</span>
-              <span class="card-title">Fibonacci Lab</span>
-              <span class="card-desc">Recursion vs. Dynamic Programming</span>
-            </a>
+        <nav class="menu-grid" aria-label="Course modules">
+          <a class="menu-card active-card" href="fibonacci.html">
+            <span class="card-index">01</span>
+            <span class="card-icon">FIB(n)</span>
+            <span class="card-title">Fibonacci Lab</span>
+            <span class="card-desc">Recursion vs. Dynamic Programming</span>
+          </a>
 
-            <a class="menu-card active-card" href="sorting.html">
-              <span class="card-index">02</span>
-              <span class="card-icon">SORT(A)</span>
-              <span class="card-title">Sorting Lab</span>
-              <span class="card-desc">Merge Sort with Divide and Conquer</span>
-            </a>
+          <a class="menu-card active-card" href="sorting.html">
+            <span class="card-index">02</span>
+            <span class="card-icon">SORT(A)</span>
+            <span class="card-title">Sorting Lab</span>
+            <span class="card-desc">Merge Sort with Divide and Conquer</span>
+          </a>
 
-            <a class="menu-card active-card" href="graph.html">
-              <span class="card-index">03</span>
-              <span class="card-icon">dist(v)</span>
-              <span class="card-title">Dijkstra Lab</span>
-              <span class="card-desc">Shortest Paths with Priority Queue</span>
-            </a>
+          <a class="menu-card active-card" href="graph.html">
+            <span class="card-index">03</span>
+            <span class="card-icon">dist(v)</span>
+            <span class="card-title">Dijkstra Lab</span>
+            <span class="card-desc">Shortest Paths with Priority Queue</span>
+          </a>
 
-            <div class="menu-card disabled-card" aria-disabled="true">
-              <span class="card-index">04</span>
-              <span class="card-icon">O(n)</span>
-              <span class="card-title">Complexity Notes</span>
-              <span class="card-desc">Asymptotic analysis and proofs</span>
-            </div>
+          <div class="menu-card disabled-card" aria-disabled="true">
+            <span class="card-index">04</span>
+            <span class="card-icon">O(n)</span>
+            <span class="card-title">Complexity Notes</span>
+            <span class="card-desc">Asymptotic analysis and proofs</span>
           </div>
         </nav>
 
@@ -87,7 +86,6 @@
               aria-label="Terminal command"
             >
           </div>
-
           <span>Build 2026.08</span>
         </footer>
       </div>
@@ -96,6 +94,7 @@
     <p class="keyboard-hint">SYSTEM MESSAGE: Choose a module to begin.</p>
   </main>
 
+  <script src="common.js"></script>
   <script src="index.js"></script>
 </body>
 </html>

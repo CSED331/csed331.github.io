@@ -2,31 +2,8 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 let fib1AnimationTimers = [];
 let fib2AnimationTimers = [];
-
 let fib1RunId = 0;
 let fib2RunId = 0;
-
-
-/* =========================================================
-   CLOCK
-   ========================================================= */
-
-function updateClock() {
-  const clock = document.getElementById("system-clock");
-
-  if (!clock) return;
-
-  const now = new Date();
-
-  clock.textContent = now.toLocaleString("ko-KR", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false
-  });
-}
 
 /* =========================================================
    FIB1 ANIMATION TIMER
@@ -134,37 +111,6 @@ function computeFIB2Values(n) {
 }
 
 
-/*
-  실제 recursive Fibonacci를 실행해서 호출 횟수를 세면
-  n이 커질수록 너무 느려지므로 호출 횟수만 DP 방식으로 계산한다.
-
-  C(0) = 1
-  C(1) = 1
-
-  C(n)
-    = 현재 fibo(n) 호출 1번
-      + fibo(n-1)의 호출 수
-      + fibo(n-2)의 호출 수
-*/
-function recursiveCallCount(n) {
-  if (n <= 1) {
-    return 1;
-  }
-
-  let previousTwo = 1;
-  let previousOne = 1;
-
-  for (let i = 2; i <= n; i += 1) {
-    const current =
-      1 + previousOne + previousTwo;
-
-    previousTwo = previousOne;
-    previousOne = current;
-  }
-
-  return previousOne;
-}
-
 function fib1AdditionCount(n) {
 
   /*
@@ -268,10 +214,6 @@ function updateSummary(n) {
     values[n];
 
 
-  const fib1Calls =
-    recursiveCallCount(n);
-
-
   const fib1Additions =
     fib1AdditionCount(n);
 
@@ -318,20 +260,6 @@ function updateSummary(n) {
 
     fib2AdditionElement.textContent =
       fib2Additions.toLocaleString();
-
-  }
-
-
-  const fib1CallElement =
-    document.getElementById(
-      "fib1-call-count"
-    );
-
-
-  if (fib1CallElement) {
-
-    fib1CallElement.textContent =
-      fib1Calls.toLocaleString();
 
   }
 
@@ -1013,7 +941,6 @@ function buildFIB1Execution(root) {
       events,
       nodeMap,
       edgeMap,
-      container,
       runId
     );
   
@@ -1047,59 +974,16 @@ function buildFIB1Execution(root) {
     events,
     nodeMap,
     edgeMap,
-    container,
     runId
   ) {
   
-    let callCount = 0;
-    let additionCount = 0;
-  
-  
-    /*
-      하나의 execution event가 진행되는 시간.
-  
-      값을 크게 하면 FIB1이 더 느리게 보인다.
-    */
     const stepDelay = 100;
     const initialDelay = 650;
-  
-  
-    /* =====================================================
-       Helper
-       ===================================================== */
-  
+
     function clearActiveNode() {
-  
-      nodeMap.forEach(
-        ({ group }) => {
-  
-          group.classList.remove(
-            "is-active"
-          );
-  
-        }
-      );
-  
-    }
-  
-    /*
-      HTML에 해당 상태창을 추가했다면 갱신하고,
-      없어도 에러가 나지 않도록 처리.
-    */
-    function updateStatus(
-      id,
-      value
-    ) {
-  
-      const element =
-        document.getElementById(id);
-  
-  
-      if (element) {
-        element.textContent =
-          value;
-      }
-  
+      nodeMap.forEach(({ group }) => {
+        group.classList.remove("is-active");
+      });
     }
   
   
@@ -1123,169 +1007,32 @@ function buildFIB1Execution(root) {
             if (!info) return;
   
   
-            const {
-              node,
-              group
-            } = info;
+            const { group } = info;
   
   
             /* =============================================
                CALL
                ============================================= */
   
-            if (
-              event.type === "call"
-            ) {
-  
-              callCount += 1;
-  
-  
-              /*
-                이전 active node highlight 해제
-              */
+            if (event.type === "call") {
               clearActiveNode();
-  
-  
-              /*
-                이 node로 들어오는 edge 표시
-              */
-              const edge =
-                edgeMap.get(
-                  event.nodeId
-                );
-  
-  
-              if (edge) {
-  
-                edge.classList.add(
-                  "is-visible"
-                );
-  
+
+              const edge = edgeMap.get(event.nodeId);
+              if (edge) edge.classList.add("is-visible");
+
+              group.classList.add("is-visible", "is-active");
+            } else if (event.type === "add") {
+              clearActiveNode();
+              group.classList.add("is-active");
+            } else if (event.type === "return") {
+              clearActiveNode();
+              group.classList.remove("is-active");
+              group.classList.add("is-done");
+
+              if (event.parentId !== null) {
+                const parentInfo = nodeMap.get(event.parentId);
+                if (parentInfo) parentInfo.group.classList.add("is-active");
               }
-  
-  
-              /*
-                현재 함수 호출 node 표시
-              */
-              group.classList.add(
-                "is-visible",
-                "is-active"
-              );
-  
-              /*
-                선택적으로 live status 갱신
-              */
-              updateStatus(
-                "fib1-live-calls",
-                callCount.toLocaleString()
-              );
-  
-  
-              updateStatus(
-                "fib1-live-current",
-                `CALL FIB1(${event.value})`
-              );
-  
-            }
-  
-  
-            /* =============================================
-               ADD
-               ============================================= */
-  
-            else if (
-              event.type === "add"
-            ) {
-  
-              additionCount += 1;
-  
-  
-              clearActiveNode();
-  
-  
-              group.classList.add(
-                "is-active"
-              );
-  
-  
-              updateStatus(
-                "fib1-live-additions",
-  
-                additionCount
-                  .toLocaleString()
-              );
-  
-  
-              updateStatus(
-                "fib1-live-current",
-  
-                `FIB1(${event.value}): ` +
-                `${event.leftResult} + ` +
-                `${event.rightResult} = ` +
-                `${event.result}`
-              );
-  
-            }
-  
-  
-            /* =============================================
-               RETURN
-               ============================================= */
-  
-            else if (
-              event.type === "return"
-            ) {
-  
-              clearActiveNode();
-  
-  
-              /*
-                계산 완료 node
-              */
-              group.classList.remove(
-                "is-active"
-              );
-  
-  
-              group.classList.add(
-                "is-done"
-              );
-  
-  
-              updateStatus(
-                "fib1-live-current",
-  
-                `RETURN ${event.result} ` +
-                `from FIB1(${event.value})`
-              );
-  
-  
-              /*
-                return 후에는 caller가 다시 실행 중
-              */
-              if (
-                event.parentId !== null
-              ) {
-  
-                const parentInfo =
-                  nodeMap.get(
-                    event.parentId
-                  );
-  
-  
-                if (parentInfo) {
-  
-                  parentInfo
-                    .group
-                    .classList
-                    .add(
-                      "is-active"
-                    );
-  
-                }
-  
-              }
-  
             }
   
           },
@@ -1303,21 +1050,10 @@ function buildFIB1Execution(root) {
       모든 실행이 끝난 뒤
     */
     scheduleFIB1Animation(
-  
       () => {
-  
         clearActiveNode();
-  
-  
-        updateStatus(
-          "fib1-live-current",
-          "DONE"
-        );
-  
       },
-  
       initialDelay + events.length * stepDelay + 100,
-  
       runId
     );
   }
@@ -1634,47 +1370,7 @@ function buildFIB1Execution(root) {
   
     const runId =
       fib1RunId;
-  
-  
-    /*
-      live counter 초기화
-    */
-    const liveCalls =
-      document.getElementById(
-        "fib1-live-calls"
-      );
-  
-  
-    const liveAdditions =
-      document.getElementById(
-        "fib1-live-additions"
-      );
-  
-  
-    const liveCurrent =
-      document.getElementById(
-        "fib1-live-current"
-      );
-  
-  
-    if (liveCalls) {
-      liveCalls.textContent = "0";
-    }
-  
-  
-    if (liveAdditions) {
-      liveAdditions.textContent = "0";
-    }
-  
-  
-    if (liveCurrent) {
-      liveCurrent.textContent = "READY";
-    }
-  
-  
-    /*
-      FIB1 tree를 먼저 생성한다.
-    */
+
     renderTree(
       n,
       runId
@@ -1753,20 +1449,7 @@ function buildFIB1Execution(root) {
   
   }
 
-/* =========================================================
-   INITIALIZATION
-   ========================================================= */
-
-   updateClock();
-
-
-   window.setInterval(
-     updateClock,
-     1000
-   );
-   
-   
-   const fibInput =
+const fibInput =
      document.getElementById(
        "fib-input"
      );

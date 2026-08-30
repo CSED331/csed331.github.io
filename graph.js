@@ -22,6 +22,8 @@
    inspectEdge: 1150,
  
    update: 900,
+
+   prevChange: 1300,
  
    keep: 650,
  
@@ -119,6 +121,12 @@
    document.getElementById(
      "random-node-count"
    );
+
+
+ const weightModeNote =
+   document.getElementById(
+     "weight-mode-note"
+   );
  
  
  const modeLabel =
@@ -145,6 +153,14 @@
    nextEdgeId: 0
  
  };
+
+
+ /* "euclidean" | "random" */
+ let weightMode = "euclidean";
+
+ let editingEdgeId = null;
+ let weightInlineInput = null;
+ let closingWeightEditor = false;
  
  
  
@@ -465,7 +481,9 @@
    ) {
  
      setBuilderMessage(
-       "Drag a vertex to move it. Edge weights update automatically."
+       weightMode === "euclidean"
+         ? "Drag a vertex to move it. Edge weights update with Euclidean distance."
+         : "Drag a vertex to move it. Random edge weights stay fixed."
      );
  
    }
@@ -516,6 +534,15 @@
        !enabled;
  
    }
+
+
+   document
+     .querySelectorAll(".weight-mode-button")
+     .forEach(button => {
+
+       button.disabled = !enabled;
+
+     });
 
 
    /* Random graph stays available; it resets the run itself. */
@@ -858,19 +885,19 @@
  /* =========================================================
     EDGE WEIGHT
     ========================================================= */
- 
- function calculateEdgeWeight(
+
+ function calculateEuclideanWeight(
    nodeA,
    nodeB
  ) {
- 
+
    const pixelDistance =
      Math.hypot(
        nodeB.x - nodeA.x,
        nodeB.y - nodeA.y
      );
- 
- 
+
+
    return Math.max(
      0.1,
      round1(
@@ -878,7 +905,105 @@
        PIXELS_PER_UNIT
      )
    );
- 
+
+ }
+
+
+ function randomEdgeWeight() {
+
+   /*
+     Keep weights readable on the canvas: 1.0 .. 10.0
+   */
+   return round1(
+     1 + Math.random() * 9
+   );
+
+ }
+
+
+ function assignEdgeWeight(
+   nodeA,
+   nodeB
+ ) {
+
+   if (weightMode === "random") {
+     return randomEdgeWeight();
+   }
+
+   return calculateEuclideanWeight(
+     nodeA,
+     nodeB
+   );
+
+ }
+
+
+ function updateWeightModeNote() {
+
+   if (!weightModeNote) {
+     return;
+   }
+
+   weightModeNote.textContent =
+     weightMode === "euclidean"
+       ? "click label to edit · moves update distance"
+       : "click label to edit · random 1.0–10.0";
+
+ }
+
+
+ function setWeightMode(mode) {
+
+   if (
+     mode !== "euclidean" &&
+     mode !== "random"
+   ) {
+     return;
+   }
+
+
+   if (isGraphLocked()) {
+     return;
+   }
+
+
+   weightMode = mode;
+
+
+   document
+     .querySelectorAll(".weight-mode-button")
+     .forEach(button => {
+
+       button.classList.toggle(
+         "is-active",
+         button.dataset.weightMode === mode
+       );
+
+     });
+
+
+   updateWeightModeNote();
+
+
+   /*
+     Reassign every existing edge so the graph matches the
+     selected weight mode immediately.
+   */
+   graph.edges.forEach(edge => {
+
+     const nodeA = getNode(edge.u);
+     const nodeB = getNode(edge.v);
+
+     if (!nodeA || !nodeB) {
+       return;
+     }
+
+     edge.weight = assignEdgeWeight(nodeA, nodeB);
+     edge.userSet = false;
+     updateEdgeElement(edge.id, false);
+
+   });
+
  }
  
  
@@ -970,10 +1095,12 @@
        nodeBId,
  
      weight:
-       calculateEdgeWeight(
+       assignEdgeWeight(
          nodeA,
          nodeB
-       )
+       ),
+
+     userSet: false
  
    };
  
@@ -1133,6 +1260,17 @@
    updateEdgeElement(
      edge.id
    );
+
+
+   weightBox.classList.add("is-editable");
+
+
+   weightBox.addEventListener("click", event => {
+
+     event.stopPropagation();
+     editEdgeWeight(edge.id);
+
+   });
  
  
    group.addEventListener(
@@ -1163,6 +1301,192 @@
    );
  
  }
+
+
+ /* =========================================================
+    EDIT EDGE WEIGHT (in-place on the label)
+    ========================================================= */
+
+ function restoreWeightLabelVisibility(edgeId) {
+
+   const element = edgeElements.get(edgeId);
+
+   if (!element) {
+     return;
+   }
+
+   element.weightBox.style.opacity = "";
+   element.weight.style.opacity = "";
+
+ }
+
+
+ function closeWeightEditor(options = {}) {
+
+   const apply = options.apply === true;
+   const edgeId = editingEdgeId;
+   const input = weightInlineInput;
+
+   if (!input && edgeId === null) {
+     return;
+   }
+
+   closingWeightEditor = true;
+   weightInlineInput = null;
+   editingEdgeId = null;
+
+   if (apply && input && edgeId !== null && !isGraphLocked()) {
+
+     const edge = getEdge(edgeId);
+     const value = Number(input.value);
+
+     if (edge && Number.isFinite(value) && value > 0) {
+
+       edge.weight = round1(value);
+       edge.userSet = true;
+       updateEdgeElement(edge.id, false);
+
+     } else if (input.value.trim() !== "") {
+
+       setBuilderMessage(
+         "Weight must be a positive number."
+       );
+
+     }
+
+   }
+
+   if (edgeId !== null) {
+     restoreWeightLabelVisibility(edgeId);
+   }
+
+   if (input) {
+     input.remove();
+   }
+
+   closingWeightEditor = false;
+
+ }
+
+
+ function openWeightEditor(edgeId) {
+
+   if (isGraphLocked()) {
+     return;
+   }
+
+   if (editingEdgeId === edgeId && weightInlineInput) {
+     weightInlineInput.focus();
+     weightInlineInput.select();
+     return;
+   }
+
+   closeWeightEditor({ apply: false });
+
+   const edge = getEdge(edgeId);
+   const element = edgeElements.get(edgeId);
+   const wrapper = document.querySelector(".graph-canvas-wrapper");
+
+   if (!edge || !element || !wrapper) {
+     return;
+   }
+
+   const nodeA = getNode(edge.u);
+   const nodeB = getNode(edge.v);
+
+   if (!nodeA || !nodeB) {
+     return;
+   }
+
+   const boxRect = element.weightBox.getBoundingClientRect();
+   const wrapRect = wrapper.getBoundingClientRect();
+
+   const input = document.createElement("input");
+
+   input.type = "number";
+   input.min = "0.1";
+   input.step = "0.1";
+   input.inputMode = "decimal";
+   input.className = "weight-inline-input";
+   input.value = edge.weight.toFixed(1);
+   input.setAttribute(
+     "aria-label",
+     `Weight for edge ${nodeA.label} ${nodeB.label}`
+   );
+
+   input.style.left = `${boxRect.left - wrapRect.left}px`;
+   input.style.top = `${boxRect.top - wrapRect.top}px`;
+   input.style.width = `${Math.max(boxRect.width, 46)}px`;
+   input.style.height = `${Math.max(boxRect.height, 26)}px`;
+
+   element.weightBox.style.opacity = "0";
+   element.weight.style.opacity = "0";
+
+   wrapper.appendChild(input);
+
+   editingEdgeId = edgeId;
+   weightInlineInput = input;
+
+   input.addEventListener("keydown", event => {
+
+     if (event.key === "Enter") {
+       event.preventDefault();
+       closeWeightEditor({ apply: true });
+     }
+
+     if (event.key === "Escape") {
+       event.preventDefault();
+       closeWeightEditor({ apply: false });
+     }
+
+   });
+
+   input.addEventListener("blur", () => {
+
+     if (closingWeightEditor) {
+       return;
+     }
+
+     closeWeightEditor({ apply: true });
+
+   });
+
+   window.requestAnimationFrame(() => {
+     input.focus();
+     input.select();
+   });
+
+ }
+
+
+ function editEdgeWeight(edgeId) {
+
+   openWeightEditor(edgeId);
+
+ }
+
+
+ function formatPrevName(previousId) {
+
+   if (
+     previousId === null ||
+     previousId === undefined
+   ) {
+     return "nil";
+   }
+
+   const previous = getNode(previousId);
+
+   return previous ? previous.label : "nil";
+
+ }
+
+
+ function formatPrevTransition(fromId, toId) {
+
+   return `prev ${formatPrevName(fromId)} → ${formatPrevName(toId)}`;
+
+ }
  
  
  
@@ -1170,7 +1494,10 @@
     UPDATE EDGE SVG
     ========================================================= */
  
- function updateEdgeElement(edgeId) {
+ function updateEdgeElement(
+   edgeId,
+   refreshWeight = false
+ ) {
  
    const edge =
      getEdge(
@@ -1212,11 +1539,22 @@
    }
  
  
-   edge.weight =
-     calculateEdgeWeight(
-       nodeA,
-       nodeB
-     );
+   if (refreshWeight) {
+
+     edge.weight =
+       assignEdgeWeight(nodeA, nodeB);
+
+     edge.userSet = false;
+
+   } else if (
+     weightMode === "euclidean" &&
+     !edge.userSet
+   ) {
+
+     edge.weight =
+       calculateEuclideanWeight(nodeA, nodeB);
+
+   }
  
  
    [
@@ -1453,6 +1791,10 @@
     ========================================================= */
  
  function deleteEdge(edgeId) {
+
+   if (editingEdgeId === edgeId) {
+     closeWeightEditor();
+   }
  
    const element =
      edgeElements.get(
@@ -1584,6 +1926,9 @@
  
    edgeStartNodeId =
      null;
+
+
+   closeWeightEditor();
  
  
    setBuilderMessage(
@@ -1811,18 +2156,13 @@
 
            element.prev.textContent =
              graph.sourceId === node.id
-               ? "prev=—"
+               ? "prev=nil"
                : "";
 
          } else {
 
-           const previous =
-             getNode(previousId);
-
            element.prev.textContent =
-             previous
-               ? `prev=${previous.label}`
-               : "";
+             `prev=${formatPrevName(previousId)}`;
 
          }
  
@@ -2307,6 +2647,53 @@
  /* =========================================================
     GRAPH VALIDATION
     ========================================================= */
+
+ function isUndirectedGraphConnected() {
+
+   if (graph.nodes.length <= 1) {
+     return true;
+   }
+
+
+   const adjacency = new Map();
+
+   graph.nodes.forEach(node => {
+     adjacency.set(node.id, []);
+   });
+
+
+   graph.edges.forEach(edge => {
+
+     adjacency.get(edge.u).push(edge.v);
+     adjacency.get(edge.v).push(edge.u);
+
+   });
+
+
+   const startId = graph.nodes[0].id;
+   const visited = new Set([startId]);
+   const stack = [startId];
+
+
+   while (stack.length > 0) {
+
+     const currentId = stack.pop();
+
+     for (const neighborId of adjacency.get(currentId)) {
+
+       if (!visited.has(neighborId)) {
+         visited.add(neighborId);
+         stack.push(neighborId);
+       }
+
+     }
+
+   }
+
+
+   return visited.size === graph.nodes.length;
+
+ }
  
  function validateGraph() {
  
@@ -2346,6 +2733,17 @@
  
      return false;
  
+   }
+
+
+   if (!isUndirectedGraphConnected()) {
+
+     setBuilderMessage(
+       "The graph must be connected. Add edges so every vertex is reachable."
+     );
+
+     return false;
+
    }
  
  
@@ -2465,6 +2863,9 @@
    setEditingEnabled(
      false
    );
+ 
+ 
+   closeWeightEditor();
  
  
    setBuilderMessage(
@@ -2669,6 +3070,18 @@
    if (
      shouldUpdate
    ) {
+
+     const oldPrevId =
+       run.prev.get(v);
+
+     const oldPrevLabel =
+       formatPrevName(oldPrevId);
+
+     const prevIsReassigned =
+       oldPrevId !== null &&
+       oldPrevId !== undefined &&
+       oldPrevId !== u;
+ 
  
      run.dist.set(
        v,
@@ -2683,13 +3096,17 @@
  
  
      addLog(
-       `decreasekey(${vNode.label})    ${formatDistance(oldDistance)} → ${formatDistance(candidate)}`
+       `decreasekey(${vNode.label})    ${formatDistance(oldDistance)} → ${formatDistance(candidate)}    ${formatPrevTransition(oldPrevId, u)}`
      );
  
  
      setOperation(
        `decreasekey(${vNode.label})`,
-       `dist(${vNode.label}): ${formatDistance(oldDistance)} → ${formatDistance(candidate)}\nprev(${vNode.label}) = ${uNode.label}`
+       `dist(${vNode.label}): ${formatDistance(oldDistance)} → ${formatDistance(candidate)}\n` +
+       `${formatPrevTransition(oldPrevId, u)}` +
+       (prevIsReassigned
+         ? "\nPredecessor changed — a better path was found."
+         : "")
      );
  
  
@@ -2712,13 +3129,19 @@
          "is-updated"
        );
 
+       nodeElement.prev.textContent =
+         formatPrevTransition(oldPrevId, u);
+
        nodeElement.prev.classList.add(
-         "is-updated"
+         "is-updated",
+         prevIsReassigned ? "is-prev-changed" : "is-prev-set"
        );
  
  
        await wait(
-         DIJKSTRA_TIMING.update
+         prevIsReassigned
+           ? DIJKSTRA_TIMING.prevChange
+           : DIJKSTRA_TIMING.update
        );
  
  
@@ -2727,8 +3150,16 @@
        );
 
        nodeElement.prev.classList.remove(
-         "is-updated"
+         "is-updated",
+         "is-prev-changed",
+         "is-prev-set"
        );
+
+       /*
+         Restore the steady prev=X label after the flash.
+       */
+       nodeElement.prev.textContent =
+         `prev=${uNode.label}`;
  
      }
  
@@ -3224,6 +3655,22 @@
  
      }
    );
+
+
+ document
+   .querySelectorAll(".weight-mode-button")
+   .forEach(button => {
+
+     button.addEventListener("click", () => {
+
+       setWeightMode(button.dataset.weightMode);
+
+     });
+
+   });
+
+
+ updateWeightModeNote();
  
  
  
@@ -3433,7 +3880,7 @@
 
 
    setBuilderMessage(
-     `Random connected graph: ${n} nodes, ${edgeCount} edges. Source: ${getNode(graph.sourceId).label}.`
+     "Click anywhere on the canvas to create a vertex, or generate a random graph."
    );
 
 

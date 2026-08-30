@@ -943,6 +943,32 @@ p {
   margin-bottom: 12px;
 }
 
+.weight-mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.weight-mode-label {
+  margin-right: 4px;
+  color: var(--highlight);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.weight-mode-hint {
+  margin-left: 4px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 .graph-clear-button {
   margin-left: auto;
   color: var(--danger);
@@ -957,8 +983,29 @@ p {
 }
 
 .graph-canvas-wrapper {
+  position: relative;
   overflow: hidden;
   background: #0b1322;
+}
+
+.weight-inline-input {
+  position: absolute;
+  z-index: 5;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--text);
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  background: #0b1322;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 0 0 2px rgba(89, 168, 255, 0.2);
+}
+
+.weight-inline-input:focus {
+  outline: none;
 }
 
 .graph-canvas {

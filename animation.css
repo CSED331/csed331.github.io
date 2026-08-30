@@ -463,6 +463,13 @@
   fill: #0b1322;
   stroke: #45536d;
   stroke-width: 1;
+  cursor: pointer;
+  transition: stroke 160ms ease, fill 160ms ease;
+}
+
+.graph-edge-weight-box.is-editable:hover {
+  fill: rgba(89, 168, 255, 0.16);
+  stroke: var(--accent);
 }
 
 .graph-edge-weight {
@@ -525,6 +532,46 @@
   transition: fill 200ms ease, font-size 200ms ease, font-weight 200ms ease;
 }
 
+.graph-node-distance.is-updated,
+.graph-node-prev.is-updated {
+  fill: var(--success);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.graph-node-prev.is-prev-set,
+.graph-node-prev.is-prev-changed {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.graph-node-prev.is-prev-set {
+  fill: #8fc5ff;
+}
+
+.graph-node-prev.is-prev-changed {
+  fill: var(--highlight);
+  font-weight: 900;
+  animation: prev-change-pulse 0.9s ease;
+}
+
+@keyframes prev-change-pulse {
+  0% {
+    opacity: 0.35;
+    transform: translateY(4px);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .graph-node.is-source .graph-node-circle {
   stroke: #ff9a9a;
   stroke-width: 4;
@@ -563,18 +610,13 @@
   stroke-width: 5;
 }
 
-.graph-node-distance.is-updated,
-.graph-node-prev.is-updated {
-  fill: var(--success);
-  font-size: 15px;
-  font-weight: 900;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .tree-edge,
   .tree-node-group,
-  .dp-row {
+  .dp-row,
+  .graph-node-prev.is-prev-changed {
     transition: none;
+    animation: none;
   }
 
   .dp-row.is-visible .dp-cell {

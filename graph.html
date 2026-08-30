@@ -39,8 +39,8 @@
           <button id="random-graph-button" type="button">RANDOM GRAPH</button>
         </div>
         <p class="control-note">
-          Creates a random connected graph. Edge count is chosen between
-          n − 1 and a complete graph.
+          Creates a random connected graph. Edge weights follow the
+          EDGE WEIGHT mode selected in the graph builder.
         </p>
       </div>
     </section>
@@ -61,6 +61,27 @@
           <button id="clear-graph-button" type="button" class="tool-button graph-clear-button">CLEAR</button>
         </div>
 
+        <div class="weight-mode-row" role="group" aria-label="Edge weight mode">
+          <span class="weight-mode-label">EDGE WEIGHT</span>
+          <button
+            type="button"
+            class="tool-button weight-mode-button is-active"
+            data-weight-mode="euclidean"
+          >
+            EUCLIDEAN
+          </button>
+          <button
+            type="button"
+            class="tool-button weight-mode-button"
+            data-weight-mode="random"
+          >
+            RANDOM
+          </button>
+          <span id="weight-mode-note" class="weight-mode-hint">
+            click label to edit · moves update distance
+          </span>
+        </div>
+
         <div id="graph-builder-message" class="graph-builder-message" aria-live="polite">
           Click anywhere on the canvas to create a vertex, or generate a random graph.
         </div>
@@ -77,11 +98,6 @@
             <g id="graph-node-layer"></g>
           </svg>
         </div>
-
-        <p class="control-note">
-          Edge weights are automatically calculated from Euclidean distance
-          and rounded to one decimal place.
-        </p>
 
         <div class="action-row">
           <button id="run-dijkstra-button" type="button" class="primary-button">▶ RUN</button>

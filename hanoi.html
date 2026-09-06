@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CSED331 Tower of Hanoi recursion visualizer">
+  <title>Hanoi Lab | CSED331</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="animation.css">
+</head>
+<body class="lab-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="lab-header">
+    <a class="back-link" href="index.html">← BACK TO WORKSTATION</a>
+    <div>
+      <span>CSED331</span>
+      <strong>HANOI LAB</strong>
+    </div>
+    <span id="system-clock" aria-label="current time"></span>
+  </header>
+
+  <main class="lab-shell">
+    <section class="lab-intro">
+      <div>
+        <p class="eyebrow">RECURSION</p>
+        <h1>Tower of Hanoi</h1>
+        <p class="lab-question">
+          How does a recursive algorithm move <em>n</em> disks by solving two
+          smaller subproblems of size <em>n − 1</em>?
+        </p>
+      </div>
+
+      <div class="control-console">
+        <label for="hanoi-disk-count">DISKS n (2 ≤ n ≤ 20)</label>
+        <div class="input-row hanoi-run-row">
+          <input id="hanoi-disk-count" type="number" min="2" max="20" value="5">
+          <button id="run-hanoi-button" type="button" class="primary-button">▶ RUN</button>
+        </div>
+        <p class="control-note">Default n = 5. Animation speed stays the same for every n.</p>
+      </div>
+    </section>
+
+    <section class="algorithm-window">
+      <header class="window-titlebar">
+        <span>HANOI</span>
+        <span>T(n) = 2T(n − 1) + O(1)</span>
+      </header>
+      <div class="window-body">
+        <div class="code-block" aria-label="Hanoi pseudocode">
+<pre><code><span class="code-function-title">Hanoi(n, A, C, B)</span>
+
+if n &gt; 0 then
+    Hanoi(n − 1, A, B, C)   <span class="code-comment">// recursive</span>
+    move disk n from A to C
+    Hanoi(n − 1, B, C, A)   <span class="code-comment">// recursive</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="hanoi-visualization" class="algorithm-window">
+      <header class="window-titlebar">
+        <span>HANOI EXECUTION</span>
+        <span id="hanoi-mode-label">READY</span>
+      </header>
+
+      <div class="window-body">
+        <div class="action-row playback-row">
+          <button id="pause-hanoi-button" type="button" class="secondary-button" disabled>
+            PAUSE
+          </button>
+          <button id="resume-hanoi-button" type="button" class="secondary-button" disabled>
+            RESUME
+          </button>
+        </div>
+
+        <div class="hanoi-execution-grid">
+          <div class="hanoi-stage-panel">
+            <div class="section-label">
+              <span>TOWERS</span>
+              <span>A → C using B</span>
+            </div>
+
+            <div id="hanoi-board" class="hanoi-board" aria-label="Tower of Hanoi visualization">
+              <div class="hanoi-base"></div>
+              <div class="hanoi-peg-column" data-peg="0">
+                <div class="hanoi-peg-label">A</div>
+                <div class="hanoi-rod"></div>
+                <div class="hanoi-stack" id="hanoi-stack-0"></div>
+              </div>
+              <div class="hanoi-peg-column" data-peg="1">
+                <div class="hanoi-peg-label">B</div>
+                <div class="hanoi-rod"></div>
+                <div class="hanoi-stack" id="hanoi-stack-1"></div>
+              </div>
+              <div class="hanoi-peg-column" data-peg="2">
+                <div class="hanoi-peg-label">C</div>
+                <div class="hanoi-rod"></div>
+                <div class="hanoi-stack" id="hanoi-stack-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="hanoi-side-panel">
+            <div class="section-label">
+              <span>CURRENT OPERATION</span>
+            </div>
+            <div class="dijkstra-operation-box hanoi-operation-box">
+              <div id="hanoi-operation-title" class="current-operation-title">READY</div>
+              <div id="hanoi-operation-detail" class="current-operation-detail">
+                Choose n and press RUN to start the recursive solution.
+              </div>
+            </div>
+
+            <div class="section-label">
+              <span>CALL STACK</span>
+            </div>
+            <div id="hanoi-call-stack" class="hanoi-call-stack">
+              <div class="hanoi-call-empty">No recursive calls yet.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hanoi-move-bar" aria-live="polite">
+          <div class="hanoi-move-stat">
+            <span>MOVES</span>
+            <strong id="hanoi-move-count">0</strong>
+          </div>
+          <div class="hanoi-move-stat">
+            <span>OPTIMAL (2<sup>n</sup> − 1)</span>
+            <strong id="hanoi-move-optimal">31</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="analysis-box">
+      <div class="analysis-title">RUNNING TIME / MOVE COUNT</div>
+      <div class="analysis-equation analysis-cases" aria-label="T of n piecewise definition">
+        <span class="cases-lhs">T(n) =</span>
+        <span class="cases-brace">{</span>
+        <div class="cases-lines">
+          <div>
+            <span class="cases-expr">0</span>
+            <span class="cases-cond">if n = 0</span>
+          </div>
+          <div>
+            <span class="cases-expr">2T(n − 1) + O(1)</span>
+            <span class="cases-cond">if n &gt; 0</span>
+          </div>
+        </div>
+      </div>
+      <div class="analysis-result">T(n) = 2<sup>n</sup> − 1 moves</div>
+    </section>
+  </main>
+
+  <script src="common.js"></script>
+  <script src="hanoi.js"></script>
+</body>
+</html>

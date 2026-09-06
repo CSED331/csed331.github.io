@@ -12,6 +12,7 @@ rabbit          Summon a rabbit
 ls              List available modules
 cd <module>     Enter a module
 fib             Fibonacci easter egg
+hanoi           Hanoi easter egg
 sort            Sorting easter egg
 dijkstra        Dijkstra easter egg
 hello           Say hello
@@ -45,6 +46,7 @@ Try exploring.
 modules/
 
 Fibonacci_Lab/             READY
+Hanoi_Lab/                 READY
 Sorting_Lab/               READY
 Dijkstra_Lab/              READY
 `,
@@ -69,6 +71,17 @@ Recursion is elegant.
 Dynamic Programming is faster.
 `,
 
+  hanoi: () => `
+Tower of Hanoi detected...
+
+T(n) = 2T(n - 1) + O(1)
+T(n) = 2^n - 1 moves
+
+Hint:
+Move n-1 aside, move n, then recurse again.
+Try: cd hanoi_lab
+`,
+
   sort: () => `
 Merge Sort: O(n log n) ...
 How about trying Quick Sort?
@@ -87,6 +100,8 @@ What if we have negative edge weights?
 
 const modules = {
   fibonacci_lab: "fibonacci.html",
+  hanoi_lab: "hanoi.html",
+  hanoi: "hanoi.html",
   sorting_lab: "sorting.html",
   dijkstra_lab: "graph.html"
 };

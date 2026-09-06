@@ -4,6 +4,8 @@
 
    let sortRunId = 0;
    let sortNodeCounter = 0;
+   let sortPaused = false;
+   let sortPlaying = false;
    
    
    /* =========================================================
@@ -36,22 +38,81 @@
    
    
    /* =========================================================
-      WAIT
+      WAIT (pause-aware)
       ========================================================= */
    
    function wait(ms) {
-   
-     return new Promise(
-       resolve => {
-   
-         window.setTimeout(
-           resolve,
-           ms
-         );
-   
+     return new Promise((resolve) => {
+       let remaining = ms;
+       let sliceStart = performance.now();
+
+       function tick() {
+         if (sortPaused) {
+           if (sliceStart !== null) {
+             remaining -= Math.max(0, performance.now() - sliceStart);
+             sliceStart = null;
+           }
+
+           const poll = () => {
+             if (sortPaused) {
+               window.setTimeout(poll, 40);
+               return;
+             }
+
+             sliceStart = performance.now();
+             tick();
+           };
+
+           window.setTimeout(poll, 40);
+           return;
+         }
+
+         if (sliceStart === null) {
+           sliceStart = performance.now();
+         }
+
+         const left = remaining - (performance.now() - sliceStart);
+
+         if (left <= 0) {
+           resolve();
+           return;
+         }
+
+         window.setTimeout(tick, Math.min(50, left));
        }
-     );
-   
+
+       tick();
+     });
+   }
+
+   function updatePlaybackControls() {
+     const pauseButton = document.getElementById("pause-sort-button");
+     const resumeButton = document.getElementById("resume-sort-button");
+
+     if (!pauseButton || !resumeButton) {
+       return;
+     }
+
+     pauseButton.disabled = !sortPlaying || sortPaused;
+     resumeButton.disabled = !sortPlaying || !sortPaused;
+   }
+
+   function pauseMergeSort() {
+     if (!sortPlaying || sortPaused) {
+       return;
+     }
+
+     sortPaused = true;
+     updatePlaybackControls();
+   }
+
+   function resumeMergeSort() {
+     if (!sortPlaying || !sortPaused) {
+       return;
+     }
+
+     sortPaused = false;
+     updatePlaybackControls();
    }
    
    
@@ -2467,11 +2528,15 @@ for (
        이전 animation 무효화
      */
    
+     sortPaused = false;
      sortRunId += 1;
    
    
      const runId =
        sortRunId;
+
+     sortPlaying = true;
+     updatePlaybackControls();
    
    
      /* =====================================================
@@ -2528,6 +2593,9 @@ for (
      if (
        runId !== sortRunId
      ) {
+       sortPlaying = false;
+       sortPaused = false;
+       updatePlaybackControls();
        return;
      }
    
@@ -2541,6 +2609,12 @@ for (
        nodeMap,
        runId
      );
+
+     if (runId === sortRunId) {
+       sortPlaying = false;
+       sortPaused = false;
+       updatePlaybackControls();
+     }
    
    }
    
@@ -2555,7 +2629,14 @@ for (
        현재 animation 취소
      */
    
+     sortPaused = false;
+     sortPlaying = false;
      sortRunId += 1;
+     updatePlaybackControls();
+
+     document.querySelectorAll(".merge-moving-cell").forEach((ghost) => {
+       ghost.remove();
+     });
    
    
      createArrayInputs();
@@ -2681,6 +2762,26 @@ for (
      );
    
    }
+
+   const pauseButton =
+     document.getElementById(
+       "pause-sort-button"
+     );
+
+   const resumeButton =
+     document.getElementById(
+       "resume-sort-button"
+     );
+
+   if (pauseButton) {
+     pauseButton.addEventListener("click", pauseMergeSort);
+   }
+
+   if (resumeButton) {
+     resumeButton.addEventListener("click", resumeMergeSort);
+   }
+
+   updatePlaybackControls();
    
    
    /* ---------------------------------------------------------

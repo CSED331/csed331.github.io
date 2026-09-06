@@ -6,8 +6,8 @@
   <meta name="description" content="CSED331 Dijkstra shortest-path visualizer">
   <title>Dijkstra Lab | CSED331</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="animation.css">
+  <link rel="stylesheet" href="styles.css?v=20260906e">
+  <link rel="stylesheet" href="animation.css?v=20260906e">
 </head>
 <body class="lab-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -80,28 +80,42 @@
           <span id="weight-mode-note" class="weight-mode-hint">
             click label to edit · moves update distance
           </span>
+
+          <div class="graph-run-controls">
+            <button id="run-dijkstra-button" type="button" class="primary-button">▶ RUN</button>
+            <button id="pause-dijkstra-button" type="button" class="secondary-button" disabled>PAUSE</button>
+            <button id="resume-dijkstra-button" type="button" class="secondary-button" disabled>RESUME</button>
+          </div>
         </div>
 
         <div id="graph-builder-message" class="graph-builder-message" aria-live="polite">
           Click anywhere on the canvas to create a vertex, or generate a random graph.
         </div>
 
-        <div class="graph-canvas-wrapper">
-          <svg
-            id="graph-canvas"
-            class="graph-canvas"
-            viewBox="0 0 1000 600"
-            role="img"
-            aria-label="Interactive graph builder"
-          >
+        <div class="graph-workspace">
+          <div class="graph-canvas-wrapper">
+            <svg
+              id="graph-canvas"
+              class="graph-canvas"
+              viewBox="0 0 1000 600"
+              role="img"
+              aria-label="Interactive graph builder"
+            >
             <g id="graph-edge-layer"></g>
+            <g id="graph-edge-label-layer"></g>
             <g id="graph-node-layer"></g>
-          </svg>
-        </div>
+            </svg>
+          </div>
 
-        <div class="action-row">
-          <button id="run-dijkstra-button" type="button" class="primary-button">▶ RUN</button>
-          <button id="reset-dijkstra-button" type="button" class="secondary-button" disabled>RESET RUN</button>
+          <section class="priority-queue-panel">
+            <div class="section-label">
+              <span>PRIORITY QUEUE</span>
+              <span>binary min-heap</span>
+            </div>
+            <div id="priority-queue" class="priority-queue">
+              <div class="pq-placeholder">Run Dijkstra to initialize the queue.</div>
+            </div>
+          </section>
         </div>
       </div>
     </section>
@@ -114,16 +128,6 @@
 
       <div class="window-body">
         <div class="dijkstra-execution-grid">
-          <section class="priority-queue-panel">
-            <div class="section-label">
-              <span>PRIORITY QUEUE</span>
-              <span>binary min-heap</span>
-            </div>
-            <div id="priority-queue" class="priority-queue">
-              <div class="pq-placeholder">Run Dijkstra to initialize the queue.</div>
-            </div>
-          </section>
-
           <section class="dijkstra-operation-panel">
             <div class="section-label">
               <span>CURRENT OPERATION</span>
@@ -135,7 +139,9 @@
                 Build a graph and choose a source vertex.
               </div>
             </div>
+          </section>
 
+          <section class="dijkstra-log-panel">
             <div class="section-label">
               <span>RUN LOG</span>
             </div>
@@ -175,7 +181,7 @@ while H is not empty do
     </section>
   </main>
 
-  <script src="common.js"></script>
-  <script src="graph.js"></script>
+  <script src="common.js?v=20260906e"></script>
+  <script src="graph.js?v=20260906e"></script>
 </body>
 </html>

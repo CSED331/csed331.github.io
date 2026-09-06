@@ -18,7 +18,7 @@
 
 .tree-edge {
   fill: none;
-  stroke: #607491;
+  stroke: #7a90ae;
   stroke-width: 1.6;
   stroke-linecap: round;
   opacity: 0;
@@ -46,53 +46,53 @@
 }
 
 .tree-node-rect {
-  fill: #17243a;
-  stroke: #6682a8;
+  fill: #ffffff;
+  stroke: #6f87a8;
   stroke-width: 1.4;
 }
 
 .tree-node-group.is-base .tree-node-rect {
-  fill: #302719;
-  stroke: #c4933d;
+  fill: #fff6e4;
+  stroke: #b77900;
 }
 
 .tree-node-text {
-  fill: #f8fafc;
+  fill: #121820;
   font-family: var(--mono);
-  font-weight: 650;
+  font-weight: 700;
   dominant-baseline: middle;
   text-anchor: middle;
   pointer-events: none;
 }
 
 .tree-node-group.is-base .tree-node-text {
-  fill: #ffe0a0;
+  fill: #8a5a00;
 }
 
 .tree-node-group.is-active .tree-node-rect {
-  fill: #25466b;
-  stroke: #91c8ff;
+  fill: #e8f2ff;
+  stroke: #a61955;
   stroke-width: 2.3;
-  filter: drop-shadow(0 0 8px rgba(89, 168, 255, 0.55));
+  filter: drop-shadow(0 0 6px rgba(166, 25, 85, 0.28));
 }
 
 .tree-node-group.is-active .tree-node-text {
-  fill: #ffffff;
+  fill: #0d3f7a;
 }
 
 .tree-node-group.is-done .tree-node-rect {
-  fill: #1d332b;
-  stroke: #69c795;
+  fill: #e8f8ef;
+  stroke: #0f8a52;
   stroke-width: 1.4;
 }
 
 .tree-node-group.is-done .tree-node-text {
-  fill: #c9f5dc;
+  fill: #0a6b3f;
 }
 
 .tree-node-group.is-done.is-active .tree-node-rect {
-  fill: #25466b;
-  stroke: #91c8ff;
+  fill: #e8f2ff;
+  stroke: #a61955;
   stroke-width: 2.3;
 }
 
@@ -131,7 +131,7 @@
   margin-bottom: 8px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.78rem;
+  font-size: 0.92rem;
 }
 
 .fib2-array-cell {
@@ -141,19 +141,19 @@
   width: 72px;
   height: 58px;
   color: var(--text);
-  border-top: 1px solid #536887;
-  border-bottom: 1px solid #536887;
-  border-left: 1px solid #536887;
-  background: rgba(20, 31, 50, 0.84);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: #ffffff;
   font-family: var(--mono);
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  opacity: 0.35;
+  opacity: 0.45;
   transition: background 280ms ease, border-color 280ms ease, opacity 280ms ease, transform 280ms ease, box-shadow 280ms ease;
 }
 
 .fib2-array-item:last-child .fib2-array-cell {
-  border-right: 1px solid #536887;
+  border-right: 1px solid var(--line);
 }
 
 .fib2-array-cell.is-visible {
@@ -162,28 +162,28 @@
 
 .fib2-array-cell.is-source {
   border-color: var(--accent);
-  background: rgba(89, 168, 255, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(89, 168, 255, 0.25);
+  background: rgba(166, 25, 85, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(166, 25, 85, 0.18);
 }
 
 .fib2-array-cell.is-result {
   border-color: var(--highlight);
-  background: rgba(245, 184, 75, 0.16);
+  background: rgba(246, 167, 0, 0.12);
   transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(245, 184, 75, 0.12);
+  box-shadow: 0 8px 20px rgba(246, 167, 0, 0.1);
 }
 
 .merge-tree-container {
   width: 100%;
   min-height: 520px;
   margin-top: 4px;
-  padding: 32px 24px 42px;
+  padding: 24px 28px 32px;
   overflow-x: auto;
   overflow-y: hidden;
   background:
-    linear-gradient(rgba(121, 148, 183, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(121, 148, 183, 0.035) 1px, transparent 1px),
-    #0c1422;
+    linear-gradient(rgba(166, 25, 85, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(166, 25, 85, 0.05) 1px, transparent 1px),
+    #faf6f8;
   background-size: 22px 22px;
   scrollbar-gutter: stable;
 }
@@ -201,9 +201,9 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 26px;
-  margin-top: 6px;
-  padding-top: 16px;
+  gap: 18px;
+  margin-top: 4px;
+  padding-top: 12px;
 }
 
 .merge-child-row::before {
@@ -212,7 +212,7 @@
   top: 0;
   left: 24%;
   right: 24%;
-  border-top: 2px dashed rgba(255, 154, 154, 0.72);
+  border-top: 2px dashed rgba(246, 167, 0, 0.55);
   opacity: 0;
   transition: opacity 300ms ease;
 }
@@ -227,7 +227,7 @@
   top: -16px;
   left: 50%;
   height: 16px;
-  border-left: 2px dashed rgba(255, 154, 154, 0.72);
+  border-left: 2px dashed rgba(246, 167, 0, 0.55);
   opacity: 0;
   transition: opacity 300ms ease;
 }
@@ -241,17 +241,17 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  min-height: 38px;
+  min-height: 28px;
   opacity: 0;
   font-family: var(--mono);
-  font-size: 0.76rem;
+  font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   transition: opacity 300ms ease, transform 300ms ease;
 }
 
 .sort-flow.is-visible {
-  opacity: 0.75;
+  opacity: 0.9;
 }
 
 .sort-flow.is-active {
@@ -265,12 +265,12 @@
 }
 
 .split-flow {
-  color: #ff9a9a;
+  color: #f6a700;
 }
 
 .merge-flow {
   margin-top: 10px;
-  color: #8fc5ff;
+  color: #a61955;
 }
 
 .merge-flow.is-visible {
@@ -279,11 +279,11 @@
 
 .merge-node-card {
   position: relative;
-  padding: 8px 9px 10px;
+  padding: 2px 0 0;
   opacity: 0;
-  border: 1px solid #536887;
-  border-radius: 7px;
-  background: #17243a;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   transform: translateY(-7px);
   transition: opacity 300ms ease, transform 340ms ease, border-color 260ms ease, background 260ms ease, box-shadow 260ms ease;
 }
@@ -294,40 +294,69 @@
 }
 
 .merge-node-card.is-active {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.merge-node-card.is-active .merge-value-cell {
   border-color: var(--highlight);
-  box-shadow: 0 0 0 2px rgba(245, 184, 75, 0.14);
+  box-shadow: 0 0 0 2px rgba(246, 167, 0, 0.18);
 }
 
 .merge-node-card.is-splitting {
-  border-color: #ff9a9a;
-  background: rgba(255, 154, 154, 0.1);
+  border-color: transparent;
+  background: transparent;
+}
+
+.merge-node-card.is-splitting .merge-value-cell {
+  border-color: #f6a700;
+  background: rgba(246, 167, 0, 0.12);
 }
 
 .merge-node-card.is-base {
+  border-color: transparent;
+  background: transparent;
+}
+
+.merge-node-card.is-base .merge-value-cell {
   border-color: var(--highlight);
-  background: rgba(245, 184, 75, 0.1);
+  background: rgba(246, 167, 0, 0.1);
 }
 
 .merge-node-card.is-merge-source {
-  border-color: #8fc5ff;
-  box-shadow: 0 0 0 1px rgba(143, 197, 255, 0.18);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.merge-node-card.is-merge-source .merge-value-cell {
+  border-color: #a61955;
 }
 
 .merge-result-card.is-merging {
-  border-color: #8fc5ff;
-  background: rgba(143, 197, 255, 0.08);
+  border-color: transparent;
+  background: transparent;
+}
+
+.merge-result-card.is-merging .merge-value-cell {
+  border-color: #a61955;
+  background: rgba(166, 25, 85, 0.06);
 }
 
 .merge-result-card.is-merged {
+  border-color: transparent;
+  background: transparent;
+}
+
+.merge-result-card.is-merged .merge-value-cell {
   border-color: var(--success);
-  background: rgba(99, 214, 160, 0.1);
+  background: rgba(15, 138, 82, 0.1);
 }
 
 .merge-node-header {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.69rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
   text-align: center;
 }
@@ -338,11 +367,11 @@
 }
 
 .merge-node-note {
-  min-height: 17px;
-  margin-top: 7px;
-  color: var(--text-soft);
+  min-height: 0;
+  margin-top: 4px;
+  color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   text-align: center;
 }
 
@@ -350,87 +379,91 @@
   display: flex;
   align-items: center;
   width: max-content;
+  padding: 4px;
+  box-sizing: content-box;
 }
 
 .merge-value-cell {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  height: 40px;
-  padding: 0 7px;
+  box-sizing: border-box;
+  min-width: 58px;
+  height: 52px;
+  padding: 0 8px;
+  margin-left: -2px;
   color: var(--text);
-  border-top: 1px solid #536887;
-  border-bottom: 1px solid #536887;
-  border-left: 1px solid #536887;
-  background: rgba(20, 31, 50, 0.9);
+  border: 2px solid #6f87a8;
+  background: #ffffff;
   font-family: var(--mono);
-  font-size: 0.9rem;
-  font-weight: 750;
+  font-size: 1.2rem;
+  font-weight: 850;
   transition: opacity 220ms ease, color 220ms ease, background 220ms ease, border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
 }
 
-.merge-value-cell:last-child {
-  border-right: 1px solid #536887;
+.merge-value-cell:first-child,
+.merge-split-divider + .merge-value-cell {
+  margin-left: 0;
 }
 
 .merge-split-divider {
   width: 0;
-  height: 36px;
+  height: 48px;
   margin: 0 6px;
-  border-left: 2px dashed rgba(255, 154, 154, 0.48);
+  border-left: 2px dashed rgba(246, 167, 0, 0.4);
   transition: border-color 250ms ease, filter 250ms ease, transform 250ms ease;
 }
 
 .merge-split-divider.is-active {
-  border-left: 3px solid #ff9a9a;
+  border-left: 3px solid #f6a700;
   transform: scaleY(1.18);
-  filter: drop-shadow(0 0 5px rgba(255, 154, 154, 0.6));
+  filter: drop-shadow(0 0 4px rgba(246, 167, 0, 0.35));
 }
 
 .merge-output-row .merge-value-cell {
-  min-width: 48px;
-  height: 44px;
+  min-width: 58px;
+  height: 52px;
   padding: 0 8px;
   color: transparent;
   border-style: dashed;
-  background: rgba(143, 197, 255, 0.025);
-  font-size: 1rem;
-  font-weight: 800;
+  border-width: 2px;
+  background: rgba(166, 25, 85, 0.04);
+  font-size: 1.2rem;
+  font-weight: 850;
 }
 
 .merge-output-row .merge-value-cell.is-next-output {
-  border-color: #8fc5ff;
-  background: rgba(143, 197, 255, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(143, 197, 255, 0.2);
+  border-color: #a61955;
+  background: rgba(166, 25, 85, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(166, 25, 85, 0.16);
 }
 
 .merge-output-row .merge-value-cell.is-filled {
   color: var(--text);
   border-style: solid;
   border-color: var(--success);
-  background: rgba(99, 214, 160, 0.1);
+  background: rgba(15, 138, 82, 0.1);
 }
 
 .merge-value-cell.is-comparing {
   position: relative;
   z-index: 5;
-  color: #07101d;
+  color: #121820;
   border-color: var(--highlight);
-  background: var(--highlight);
+  background: #ffd166;
   font-size: 1.15rem;
   font-weight: 900;
   transform: translateY(-5px) scale(1.1);
-  box-shadow: 0 7px 18px rgba(245, 184, 75, 0.28);
+  box-shadow: 0 7px 18px rgba(246, 167, 0, 0.2);
 }
 
 .merge-value-cell.is-moving-source {
-  border-color: #8fc5ff;
-  background: rgba(143, 197, 255, 0.18);
+  border-color: #a61955;
+  background: rgba(166, 25, 85, 0.12);
 }
 
 .merge-value-cell.is-used {
-  opacity: 0.28;
+  opacity: 0.3;
 }
 
 .merge-moving-cell {
@@ -438,12 +471,12 @@
   z-index: 9999;
   pointer-events: none;
   margin: 0;
-  color: #07101d;
-  border: 1px solid #8fc5ff;
-  background: #8fc5ff;
+  color: #ffffff;
+  border: 1px solid #a61955;
+  background: #a61955;
   font-size: 1.15rem;
   font-weight: 900;
-  box-shadow: 0 5px 18px rgba(143, 197, 255, 0.28);
+  box-shadow: 0 5px 18px rgba(166, 25, 85, 0.22);
   transition: transform 800ms cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
@@ -454,30 +487,34 @@
 }
 
 .graph-edge-line {
-  stroke: #62708a;
+  stroke: #6f87a8;
   stroke-width: 2.2;
   transition: stroke 220ms ease, stroke-width 220ms ease, opacity 220ms ease;
 }
 
 .graph-edge-weight-box {
-  fill: #0b1322;
-  stroke: #45536d;
-  stroke-width: 1;
+  fill: #ffffff;
+  stroke: #243044;
+  stroke-width: 1.8;
   cursor: pointer;
   transition: stroke 160ms ease, fill 160ms ease;
+  pointer-events: auto;
 }
 
 .graph-edge-weight-box.is-editable:hover {
-  fill: rgba(89, 168, 255, 0.16);
+  fill: rgba(166, 25, 85, 0.12);
   stroke: var(--accent);
 }
 
 .graph-edge-weight {
-  fill: var(--text-soft);
+  fill: #111111;
   font-family: var(--mono);
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 22px;
+  font-weight: 900;
   pointer-events: none;
+  paint-order: stroke fill;
+  stroke: #ffffff;
+  stroke-width: 3px;
 }
 
 .graph-edge.is-relaxing .graph-edge-line {
@@ -486,7 +523,7 @@
 }
 
 .graph-edge.is-tree-edge .graph-edge-line {
-  stroke: #8fc5ff;
+  stroke: #a61955;
   stroke-width: 4;
 }
 
@@ -500,14 +537,14 @@
 }
 
 .graph-node-circle {
-  fill: #17243a;
-  stroke: #6d7e9a;
+  fill: #ffffff;
+  stroke: #4d678a;
   stroke-width: 2.5;
   transition: fill 220ms ease, stroke 220ms ease, stroke-width 220ms ease, filter 220ms ease;
 }
 
 .graph-node-label {
-  fill: var(--text);
+  fill: #121820;
   font-family: var(--mono);
   font-size: 18px;
   font-weight: 900;
@@ -515,89 +552,115 @@
 }
 
 .graph-node-distance {
-  fill: var(--muted);
+  fill: #111111;
   font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 900;
   pointer-events: none;
+  paint-order: stroke fill;
+  stroke: #ffffff;
+  stroke-width: 4px;
   transition: fill 200ms ease, font-size 200ms ease, font-weight 200ms ease;
 }
 
 .graph-node-prev {
-  fill: #8fb0d4;
+  fill: #111111;
   font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 900;
   pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  paint-order: stroke fill;
+  stroke: #ffffff;
+  stroke-width: 4px;
   transition: fill 200ms ease, font-size 200ms ease, font-weight 200ms ease;
 }
 
-.graph-node-distance.is-updated,
-.graph-node-prev.is-updated {
-  fill: var(--success);
-  font-size: 13px;
+.graph-node-distance.is-updated {
+  fill: #0b7a48;
+  font-size: 19px;
   font-weight: 900;
 }
 
-.graph-node-prev.is-prev-set,
-.graph-node-prev.is-prev-changed {
-  font-size: 11px;
-  letter-spacing: 0.02em;
+.graph-node-prev.is-updated {
+  font-size: 18px;
+  font-weight: 900;
 }
 
 .graph-node-prev.is-prev-set {
-  fill: #8fc5ff;
+  fill: #0b3d91;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
 }
 
 .graph-node-prev.is-prev-changed {
-  fill: var(--highlight);
+  fill: #9a3412;
+  font-size: 20px;
   font-weight: 900;
-  animation: prev-change-pulse 0.9s ease;
+  letter-spacing: 0.03em;
+  animation: prev-change-pulse 2.4s ease;
+}
+
+.graph-node.is-prev-flash .graph-node-circle {
+  stroke: #f6a700;
+  stroke-width: 7;
+  fill: #ffedd5;
+  filter: drop-shadow(0 0 10px rgba(194, 65, 12, 0.55));
 }
 
 @keyframes prev-change-pulse {
   0% {
-    opacity: 0.35;
-    transform: translateY(4px);
+    opacity: 0.15;
+    transform: translateY(8px) scale(0.85);
   }
 
-  35% {
+  18% {
     opacity: 1;
-    transform: translateY(-2px);
+    transform: translateY(-6px) scale(1.28);
+  }
+
+  40% {
+    transform: translateY(0) scale(1.16);
+  }
+
+  70% {
+    transform: translateY(0) scale(1.08);
   }
 
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .graph-node.is-source .graph-node-circle {
-  stroke: #ff9a9a;
+  stroke: #f6a700;
   stroke-width: 4;
 }
 
 .graph-node.is-edge-start .graph-node-circle {
   stroke: var(--highlight);
   stroke-width: 5;
-  filter: drop-shadow(0 0 6px rgba(245, 184, 75, 0.45));
+  filter: drop-shadow(0 0 6px rgba(246, 167, 0, 0.35));
 }
 
 .graph-node.is-frontier .graph-node-circle {
-  fill: rgba(245, 184, 75, 0.14);
+  fill: rgba(246, 167, 0, 0.12);
   stroke: var(--highlight);
 }
 
 .graph-node.is-finalized .graph-node-circle {
-  fill: rgba(89, 168, 255, 0.18);
-  stroke: #8fc5ff;
+  fill: rgba(166, 25, 85, 0.12);
+  stroke: #a61955;
   stroke-width: 4;
 }
 
 .graph-node.is-current .graph-node-circle {
   stroke: var(--highlight);
   stroke-width: 6;
-  filter: drop-shadow(0 0 7px rgba(245, 184, 75, 0.55));
+  filter: drop-shadow(0 0 7px rgba(246, 167, 0, 0.4));
 }
 
 .graph-node.is-relax-target .graph-node-circle {
@@ -626,18 +689,23 @@
 
 @media (max-width: 760px) {
   .merge-child-row {
-    gap: 14px;
+    gap: 12px;
   }
 
   .merge-value-cell {
-    min-width: 32px;
-    height: 31px;
-    padding: 0 4px;
-    font-size: 0.72rem;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 5px;
+    font-size: 1.05rem;
+  }
+
+  .merge-output-row .merge-value-cell {
+    min-width: 44px;
+    height: 44px;
   }
 
   .merge-split-divider {
-    height: 32px;
+    height: 40px;
     margin: 0 4px;
   }
 }

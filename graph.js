@@ -23,7 +23,9 @@
  
    update: 900,
 
-   prevChange: 1300,
+   prevChange: 3000,
+
+   prevSet: 1700,
  
    keep: 650,
  
@@ -48,6 +50,12 @@
  const edgeLayer =
    document.getElementById(
      "graph-edge-layer"
+   );
+
+
+ const edgeLabelLayer =
+   document.getElementById(
+     "graph-edge-label-layer"
    );
  
  
@@ -97,11 +105,17 @@
    document.getElementById(
      "run-dijkstra-button"
    );
- 
- 
- const resetRunButton =
+
+
+ const pauseButton =
    document.getElementById(
-     "reset-dijkstra-button"
+     "pause-dijkstra-button"
+   );
+
+
+ const resumeButton =
+   document.getElementById(
+     "resume-dijkstra-button"
    );
  
  
@@ -244,6 +258,8 @@
  
  
  let runToken = 0;
+ let dijkstraPaused = false;
+ let dijkstraPlaying = false;
  
  
  
@@ -252,18 +268,78 @@
     ========================================================= */
  
  function wait(ms) {
- 
-   return new Promise(
-     resolve => {
- 
-       window.setTimeout(
-         resolve,
-         ms
-       );
- 
+   return new Promise((resolve) => {
+     let remaining = ms;
+     let sliceStart = performance.now();
+
+     function tick() {
+       if (dijkstraPaused) {
+         if (sliceStart !== null) {
+           remaining -= Math.max(0, performance.now() - sliceStart);
+           sliceStart = null;
+         }
+
+         const poll = () => {
+           if (dijkstraPaused) {
+             window.setTimeout(poll, 40);
+             return;
+           }
+
+           sliceStart = performance.now();
+           tick();
+         };
+
+         window.setTimeout(poll, 40);
+         return;
+       }
+
+       if (sliceStart === null) {
+         sliceStart = performance.now();
+       }
+
+       const left = remaining - (performance.now() - sliceStart);
+
+       if (left <= 0) {
+         resolve();
+         return;
+       }
+
+       window.setTimeout(tick, Math.min(50, left));
      }
-   );
- 
+
+     tick();
+   });
+ }
+
+
+ function updateDijkstraPlaybackControls() {
+   if (pauseButton) {
+     pauseButton.disabled = !dijkstraPlaying || dijkstraPaused;
+   }
+
+   if (resumeButton) {
+     resumeButton.disabled = !dijkstraPlaying || !dijkstraPaused;
+   }
+ }
+
+
+ function pauseDijkstra() {
+   if (!dijkstraPlaying || dijkstraPaused) {
+     return;
+   }
+
+   dijkstraPaused = true;
+   updateDijkstraPlaybackControls();
+ }
+
+
+ function resumeDijkstra() {
+   if (!dijkstraPlaying || !dijkstraPaused) {
+     return;
+   }
+
+   dijkstraPaused = false;
+   updateDijkstraPlaybackControls();
  }
  
  
@@ -726,7 +802,7 @@
  
    dist.setAttribute(
      "y",
-     "42"
+     "46"
    );
 
 
@@ -752,7 +828,7 @@
 
    prev.setAttribute(
      "y",
-     "58"
+     "66"
    );
  
  
@@ -1190,19 +1266,19 @@
  
    weightBox.setAttribute(
      "width",
-     "42"
+     "62"
    );
  
  
    weightBox.setAttribute(
      "height",
-     "24"
+     "34"
    );
  
  
    weightBox.setAttribute(
      "rx",
-     "5"
+     "6"
    );
  
  
@@ -1228,21 +1304,32 @@
  
    weight.setAttribute(
      "dy",
-     "5"
+     "7"
    );
  
  
    group.append(
      hitLine,
-     line,
-     weightBox,
-     weight
+     line
    );
  
  
    edgeLayer.appendChild(
      group
    );
+
+
+   if (edgeLabelLayer) {
+     edgeLabelLayer.append(
+       weightBox,
+       weight
+     );
+   } else {
+     group.append(
+       weightBox,
+       weight
+     );
+   }
  
  
    edgeElements.set(
@@ -1599,29 +1686,41 @@
        nodeA.y +
        nodeB.y
      ) / 2;
+
+
+   /*
+     Offset the label perpendicular to the edge so the line
+     does not run straight through the weight text.
+   */
+   const dx = nodeB.x - nodeA.x;
+   const dy = nodeB.y - nodeA.y;
+   const length = Math.hypot(dx, dy) || 1;
+   const offset = 16;
+   const labelX = midX - (dy / length) * offset;
+   const labelY = midY + (dx / length) * offset;
  
  
    element.weightBox.setAttribute(
      "x",
-     midX - 21
+     labelX - 31
    );
  
  
    element.weightBox.setAttribute(
      "y",
-     midY - 12
+     labelY - 17
    );
  
  
    element.weight.setAttribute(
      "x",
-     midX
+     labelX
    );
  
  
    element.weight.setAttribute(
      "y",
-     midY
+     labelY
    );
  
  
@@ -1807,13 +1906,16 @@
    ) {
  
      element.group.remove();
+
+     if (element.weightBox) {
+       element.weightBox.remove();
+     }
+
+     if (element.weight) {
+       element.weight.remove();
+     }
  
    }
- 
- 
-   edgeElements.delete(
-     edgeId
-   );
  
  
    graph.edges =
@@ -1922,6 +2024,10 @@
  
    nodeLayer.replaceChildren();
    edgeLayer.replaceChildren();
+
+   if (edgeLabelLayer) {
+     edgeLabelLayer.replaceChildren();
+   }
  
  
    edgeStartNodeId =
@@ -2759,6 +2865,8 @@
  
  function resetExecution() {
  
+   dijkstraPaused = false;
+   dijkstraPlaying = false;
    runToken += 1;
  
  
@@ -2792,12 +2900,10 @@
      `;
  
  
-   resetRunButton.disabled =
-     true;
- 
- 
    runButton.disabled =
      false;
+
+   updateDijkstraPlaybackControls();
  
  
    syncNodeClasses();
@@ -2883,10 +2989,10 @@
  
    runButton.disabled =
      true;
- 
- 
-   resetRunButton.disabled =
-     false;
+
+   dijkstraPaused = false;
+   dijkstraPlaying = true;
+   updateDijkstraPlaybackControls();
  
  
    modeLabel.textContent =
@@ -3136,12 +3242,16 @@
          "is-updated",
          prevIsReassigned ? "is-prev-changed" : "is-prev-set"
        );
+
+       if (prevIsReassigned) {
+         nodeElement.group.classList.add("is-prev-flash");
+       }
  
  
        await wait(
          prevIsReassigned
            ? DIJKSTRA_TIMING.prevChange
-           : DIJKSTRA_TIMING.update
+           : DIJKSTRA_TIMING.prevSet
        );
  
  
@@ -3154,6 +3264,8 @@
          "is-prev-changed",
          "is-prev-set"
        );
+
+       nodeElement.group.classList.remove("is-prev-flash");
 
        /*
          Restore the steady prev=X label after the flash.
@@ -3486,10 +3598,10 @@
  
    runButton.disabled =
      false;
- 
- 
-   resetRunButton.disabled =
-     false;
+
+   dijkstraPlaying = false;
+   dijkstraPaused = false;
+   updateDijkstraPlaybackControls();
  
  
    await wait(
@@ -3678,10 +3790,14 @@
     CLEAR BUTTON
     ========================================================= */
  
- clearGraphButton.addEventListener(
-   "click",
-   clearGraph
- );
+ if (clearGraphButton) {
+
+   clearGraphButton.addEventListener(
+     "click",
+     clearGraph
+   );
+
+ }
  
  
  
@@ -3893,31 +4009,6 @@
  /* =========================================================
     RUN BUTTONS
     ========================================================= */
- 
- runButton.addEventListener(
-   "click",
-   async () => {
- 
-     if (
-       run.finished
-     ) {
- 
-       resetExecution();
- 
-     }
- 
- 
-     await startAutoDijkstra();
- 
-   }
- );
- 
- 
- resetRunButton.addEventListener(
-   "click",
-   resetExecution
- );
-
 
  if (randomGraphButton) {
 
@@ -3943,6 +4034,46 @@
    );
 
  }
+
+ 
+ if (runButton) {
+
+   runButton.addEventListener(
+     "click",
+     async () => {
+ 
+       if (
+         run.finished
+       ) {
+ 
+         resetExecution();
+ 
+       }
+
+       if (dijkstraPlaying) {
+         return;
+       }
+ 
+ 
+       await startAutoDijkstra();
+ 
+     }
+   );
+
+ }
+
+
+ if (pauseButton) {
+   pauseButton.addEventListener("click", pauseDijkstra);
+ }
+
+
+ if (resumeButton) {
+   resumeButton.addEventListener("click", resumeDijkstra);
+ }
+
+
+ updateDijkstraPlaybackControls();
  
  
  

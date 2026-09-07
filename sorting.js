@@ -16,24 +16,24 @@
       ========================================================= */
    
    const SORT_TIMING = {
-     scroll: 700,
+     scroll: 470,
    
-     enter: 600,
+     enter: 400,
    
-     splitFocus: 1000,
-     splitReveal: 750,
+     splitFocus: 670,
+     splitReveal: 500,
    
-     baseCase: 750,
+     baseCase: 500,
    
-     mergeStart: 950,
-     compare: 1300,
+     mergeStart: 630,
+     compare: 870,
    
-     move: 800,
-     afterMove: 350,
+     move: 530,
+     afterMove: 230,
    
-     mergeDone: 950,
+     mergeDone: 630,
    
-     done: 700
+     done: 470
    };
    
    
@@ -164,7 +164,7 @@
        Math.max(
          2,
          Math.min(
-           16,
+           20,
            n
          )
        );
@@ -172,6 +172,9 @@
    
      sizeInput.value =
        String(n);
+
+     container.dataset.n = String(n);
+     container.style.setProperty("--sort-n", String(n));
    
    
      container.replaceChildren();
@@ -1283,6 +1286,152 @@
    }
    
    
+
+   /* =========================================================
+      FIT MERGE TREE TO CONTAINER WIDTH
+
+      Large n trees are scaled down as a whole so the diagram
+      stays fully visible without horizontal scrolling.
+      ========================================================= */
+
+   function fitMergeTreeToContainer(
+     container
+   ) {
+
+     if (!container) {
+       return;
+     }
+
+
+     const host =
+       container.querySelector(
+         ".merge-tree-scale-host"
+       );
+
+
+     const inner =
+       container.querySelector(
+         ".merge-tree-scale-inner"
+       );
+
+
+     if (
+       !host ||
+       !inner
+     ) {
+       return;
+     }
+
+
+     inner.style.transform =
+       "scale(1)";
+
+
+     host.style.height =
+       "";
+
+
+     const available =
+       Math.max(
+         0,
+         container.clientWidth - 56
+       );
+
+
+     const needed =
+       inner.scrollWidth;
+
+
+     const scale =
+       needed > 0
+         ? Math.min(
+             1,
+             available / needed
+           )
+         : 1;
+
+
+     inner.style.transform =
+       `scale(${scale})`;
+
+
+     host.style.height =
+       `${Math.ceil(inner.scrollHeight * scale)}px`;
+
+
+     container.dataset.mergeScale =
+       String(scale);
+
+   }
+
+
+   function ensureMergeTreeFitObserver(
+     container
+   ) {
+
+     if (
+       !container ||
+       container.dataset.fitObserverAttached === "1"
+     ) {
+       return;
+     }
+
+
+     container.dataset.fitObserverAttached =
+       "1";
+
+
+     let frame = 0;
+
+
+     const scheduleFit =
+       () => {
+
+         window.cancelAnimationFrame(
+           frame
+         );
+
+
+         frame =
+           window.requestAnimationFrame(
+             () => {
+
+               fitMergeTreeToContainer(
+                 container
+               );
+
+             }
+           );
+
+       };
+
+
+     if (
+       typeof ResizeObserver !== "undefined"
+     ) {
+
+       const observer =
+         new ResizeObserver(
+           scheduleFit
+         );
+
+
+       observer.observe(
+         container
+       );
+
+     } else {
+
+       window.addEventListener(
+         "resize",
+         scheduleFit
+       );
+
+     }
+
+   }
+
+
    /* =========================================================
       RENDER FULL PPT-STYLE DIAGRAM
    
@@ -1576,14 +1725,71 @@
      }
    
    
-     container.appendChild(
+     const scaleHost =
+       document.createElement(
+         "div"
+       );
+
+
+     scaleHost.className =
+       "merge-tree-scale-host";
+
+
+     const scaleInner =
+       document.createElement(
+         "div"
+       );
+
+
+     scaleInner.className =
+       "merge-tree-scale-inner";
+
+
+     scaleInner.appendChild(
        buildSubtree(
          root,
          true
        )
      );
-   
-   
+
+
+     scaleHost.appendChild(
+       scaleInner
+     );
+
+
+     container.appendChild(
+       scaleHost
+     );
+
+
+     ensureMergeTreeFitObserver(
+       container
+     );
+
+
+     window.requestAnimationFrame(
+       () => {
+
+         fitMergeTreeToContainer(
+           container
+         );
+
+
+         window.requestAnimationFrame(
+           () => {
+
+             fitMergeTreeToContainer(
+               container
+             );
+
+           }
+         );
+
+       }
+     );
+
+
      return nodeMap;
    }
    

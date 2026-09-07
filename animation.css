@@ -178,14 +178,27 @@
   min-height: 520px;
   margin-top: 4px;
   padding: 24px 28px 32px;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   background:
     linear-gradient(rgba(166, 25, 85, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(166, 25, 85, 0.05) 1px, transparent 1px),
     #faf6f8;
   background-size: 22px 22px;
-  scrollbar-gutter: stable;
+  display: flex;
+  justify-content: center;
+}
+
+.merge-tree-scale-host {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.merge-tree-scale-inner {
+  width: max-content;
+  transform-origin: top center;
+  will-change: transform;
 }
 
 .merge-subtree {
@@ -477,7 +490,7 @@
   font-size: 1.15rem;
   font-weight: 900;
   box-shadow: 0 5px 18px rgba(166, 25, 85, 0.22);
-  transition: transform 800ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: transform 530ms cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
 .graph-edge-hit {

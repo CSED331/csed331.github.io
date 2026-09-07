@@ -887,34 +887,43 @@ p {
 
 .sort-array-inputs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: clamp(3px, calc((22 - var(--sort-n, 8)) * 0.45px), 8px);
   margin-top: 18px;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .sort-input-cell-wrapper {
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
   align-items: center;
+  min-width: 0;
+  max-width: 74px;
 }
 
 .sort-input-index {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: var(--muted);
   font-family: var(--mono);
-  font-size: 0.88rem;
+  font-size: clamp(0.62rem, calc(1.15rem - var(--sort-n, 8) * 0.025rem), 0.88rem);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .sort-array-value {
-  width: 74px;
-  height: 58px;
-  padding: 5px;
+  width: 100%;
+  min-width: 0;
+  height: clamp(36px, calc(70px - var(--sort-n, 8) * 1.4px), 58px);
+  padding: 3px;
   color: var(--text);
   border: 1px solid var(--line);
   border-radius: 6px;
   background: #ffffff;
   font-family: var(--mono);
-  font-size: 1.2rem;
+  font-size: clamp(0.72rem, calc(1.45rem - var(--sort-n, 8) * 0.035rem), 1.2rem);
   font-weight: 800;
   text-align: center;
 }
@@ -1247,9 +1256,9 @@ p {
   position: relative;
   overflow: hidden;
   flex: 1 1 auto;
-  height: 440px;
-  min-height: 440px;
-  max-height: 440px;
+  height: var(--hanoi-board-height, 440px);
+  min-height: var(--hanoi-board-height, 440px);
+  max-height: var(--hanoi-board-height, 440px);
   padding: 14px 18px 24px;
   border: 1px solid var(--line-soft);
   border-radius: 7px;
@@ -1282,7 +1291,8 @@ p {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  min-height: 360px;
+  min-height: var(--hanoi-column-height, 360px);
+  height: var(--hanoi-column-height, 360px);
   padding-top: 44px;
   padding-bottom: 36px;
 }
@@ -1291,7 +1301,7 @@ p {
   position: absolute;
   bottom: 32px;
   width: 14px;
-  height: 270px;
+  height: var(--hanoi-rod-height, 270px);
   border-radius: 8px 8px 2px 2px;
   background: linear-gradient(90deg, #a08968, #7a6548 45%, #b59a74);
   z-index: 0;
@@ -1305,7 +1315,7 @@ p {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-  gap: 4px;
+  gap: var(--hanoi-disk-gap, 4px);
   min-height: 40px;
 }
 
@@ -1377,11 +1387,11 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 28px;
+  height: var(--hanoi-disk-height, 28px);
   border-radius: 8px;
   color: #ffffff;
   font-family: var(--mono);
-  font-size: 0.92rem;
+  font-size: var(--hanoi-disk-font-size, 0.92rem);
   font-weight: 850;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.28),

@@ -30,6 +30,16 @@ let runToken = 0;
 let hanoiPaused = false;
 let hanoiPlaying = false;
 let callStack = [];
+let towerLayout = {
+  diskHeight: 28,
+  diskGap: 4,
+  rodHeight: 270,
+  columnHeight: 360,
+  boardHeight: 440,
+  baseOffset: 32,
+  liftClearance: 48,
+  diskFontSize: 0.92
+};
 
 function clampDiskCount(value) {
   let n = Number.parseInt(value, 10);
@@ -250,6 +260,50 @@ function diskColor(size) {
   return DISK_PALETTE[(size - 1) % DISK_PALETTE.length];
 }
 
+function towerLayoutFor(n) {
+  const disks = Math.max(2, n);
+  // Keep disks readable for small n; shrink gradually for large n.
+  const diskHeight =
+    disks <= 7 ? 28 : disks <= 12 ? 22 : disks <= 16 ? 18 : 16;
+  const diskGap = disks <= 10 ? 4 : 3;
+  const stackHeight = disks * diskHeight + Math.max(0, disks - 1) * diskGap;
+  const labelSpace = 44;
+  const baseSpace = 36;
+  const liftClearance = Math.max(40, diskHeight + 24);
+  const rodHeight = Math.max(stackHeight + liftClearance, disks <= 8 ? 270 : 0);
+  const columnHeight = labelSpace + rodHeight + baseSpace;
+  const boardPaddingY = 38;
+  const boardHeight = Math.max(
+    columnHeight + boardPaddingY,
+    disks <= 8 ? 440 : 0
+  );
+  const diskFontSize =
+    diskHeight >= 26 ? 0.92 : diskHeight >= 20 ? 0.78 : 0.68;
+
+  return {
+    diskHeight,
+    diskGap,
+    rodHeight,
+    columnHeight,
+    boardHeight,
+    baseOffset: 32,
+    liftClearance,
+    diskFontSize
+  };
+}
+
+function setTowerLayout(n) {
+  towerLayout = towerLayoutFor(n);
+  if (!boardElement) return;
+
+  boardElement.style.setProperty("--hanoi-board-height", `${towerLayout.boardHeight}px`);
+  boardElement.style.setProperty("--hanoi-column-height", `${towerLayout.columnHeight}px`);
+  boardElement.style.setProperty("--hanoi-rod-height", `${towerLayout.rodHeight}px`);
+  boardElement.style.setProperty("--hanoi-disk-height", `${towerLayout.diskHeight}px`);
+  boardElement.style.setProperty("--hanoi-disk-gap", `${towerLayout.diskGap}px`);
+  boardElement.style.setProperty("--hanoi-disk-font-size", `${towerLayout.diskFontSize}rem`);
+}
+
 function diskWidthPercent(size, n) {
   const min = 34;
   const max = 92;
@@ -276,6 +330,7 @@ function resetBoard(n) {
   updateMoveCount();
   updateOptimal(n);
   setCallStackSize(n);
+  setTowerLayout(n);
   clearCallStack();
 
   stacks.forEach((stack) => {
@@ -324,14 +379,16 @@ async function animateDiskMove(size, fromPeg, toPeg, timing) {
   const startRect = disk.getBoundingClientRect();
   const boardRect = boardElement.getBoundingClientRect();
   const diskHeight = startRect.height;
+  const gap = towerLayout.diskGap;
   const targetCount = pegs[toPeg].length;
-  const stackHeight = (targetCount - 1) * (diskHeight + 4);
+  const stackHeight = (targetCount - 1) * (diskHeight + gap);
   const columnRect = toColumn.getBoundingClientRect();
   const targetLeft =
     columnRect.left - boardRect.left + (columnRect.width - startRect.width) / 2;
-  const baseTop = columnRect.bottom - boardRect.top - 32;
+  const baseTop = columnRect.bottom - boardRect.top - towerLayout.baseOffset;
   const targetTop = baseTop - stackHeight - diskHeight;
-  const liftTop = Math.min(targetTop, startRect.top - boardRect.top) - 48;
+  const liftTop =
+    Math.min(targetTop, startRect.top - boardRect.top) - towerLayout.liftClearance;
   const ease = "cubic-bezier(0.2, 0.75, 0.25, 1)";
 
   disk.classList.add("is-flying");
@@ -344,7 +401,7 @@ async function animateDiskMove(size, fromPeg, toPeg, timing) {
   await wait(16);
 
   disk.style.transition = `top ${timing.lift}ms ${ease}`;
-  disk.style.top = `${Math.max(12, liftTop)}px`;
+  disk.style.top = `${Math.max(8, liftTop)}px`;
   await wait(timing.lift);
 
   disk.style.transition = `left ${timing.travel}ms ${ease}`;

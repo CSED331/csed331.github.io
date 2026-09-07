@@ -42,7 +42,7 @@ function optimalMoves(n) {
 }
 
 function timingFor() {
-  return { announce: 1400, lift: 520, travel: 780, drop: 520, between: 380 };
+  return { announce: 530, lift: 230, travel: 350, drop: 230, between: 170 };
 }
 
 function shouldAnnounce(n, depthSize) {
@@ -125,29 +125,102 @@ function updateOptimal(n) {
   }
 }
 
-function renderCallStack() {
-  if (!callStackElement) return;
+const CALL_STACK_FRAME_HEIGHT = 30;
+const CALL_STACK_GAP = 4;
+const CALL_STACK_PADDING = 20;
 
-  if (callStack.length === 0) {
-    callStackElement.innerHTML =
-      '<div class="hanoi-call-empty">No recursive calls yet.</div>';
+function callStackHeightFor(n) {
+  const slots = Math.max(2, n);
+  return (
+    CALL_STACK_PADDING +
+    slots * CALL_STACK_FRAME_HEIGHT +
+    Math.max(0, slots - 1) * CALL_STACK_GAP
+  );
+}
+
+function setCallStackSize(n) {
+  if (!callStackElement) return;
+  const height = callStackHeightFor(n);
+  callStackElement.style.height = `${height}px`;
+  callStackElement.style.minHeight = `${height}px`;
+  callStackElement.style.maxHeight = `${height}px`;
+}
+
+function showCallStackEmpty() {
+  if (!callStackElement) return;
+  callStackElement.innerHTML =
+    '<div class="hanoi-call-empty">No recursive calls yet.</div>';
+}
+
+function clearCallStack() {
+  callStack = [];
+  showCallStackEmpty();
+}
+
+function getCallStackFrames() {
+  if (!callStackElement) return null;
+
+  let frames = callStackElement.querySelector(".hanoi-call-frames");
+  if (frames) return frames;
+
+  callStackElement.replaceChildren();
+  frames = document.createElement("div");
+  frames.className = "hanoi-call-frames";
+  callStackElement.appendChild(frames);
+  return frames;
+}
+
+function pinCallStackToBottom() {
+  if (!callStackElement) return;
+  callStackElement.scrollTop = callStackElement.scrollHeight;
+}
+
+function pushCallFrame(frame) {
+  callStack.push(frame);
+  const frames = getCallStackFrames();
+  if (!frames) return;
+
+  frames
+    .querySelectorAll(".hanoi-call-frame.is-current")
+    .forEach((el) => el.classList.remove("is-current"));
+
+  const row = document.createElement("div");
+  row.className = "hanoi-call-frame is-current";
+  row.textContent = frame;
+
+  // Newest on top; older frames stay anchored at the bottom of the fixed box.
+  frames.prepend(row);
+  pinCallStackToBottom();
+}
+
+function popCallFrame() {
+  if (callStack.length === 0) return;
+  callStack.pop();
+
+  const frames = callStackElement
+    ? callStackElement.querySelector(".hanoi-call-frames")
+    : null;
+  if (!frames) {
+    showCallStackEmpty();
     return;
   }
 
-  callStackElement.replaceChildren();
+  const top = frames.querySelector(".hanoi-call-frame");
+  if (!top) {
+    showCallStackEmpty();
+    return;
+  }
 
-  callStack.forEach((frame, index) => {
-    const row = document.createElement("div");
-    row.className = "hanoi-call-frame";
-    if (index === callStack.length - 1) {
-      row.classList.add("is-current");
-    }
-    row.style.paddingLeft = `${10 + index * 14}px`;
-    row.textContent = frame;
-    callStackElement.appendChild(row);
-  });
+  top.remove();
 
-  callStackElement.scrollTop = callStackElement.scrollHeight;
+  const next = frames.querySelector(".hanoi-call-frame");
+  if (!next) {
+    showCallStackEmpty();
+    return;
+  }
+
+  next.classList.add("is-current");
+  pinCallStackToBottom();
 }
 
 const DISK_PALETTE = [
@@ -202,7 +275,8 @@ function resetBoard(n) {
   callStack = [];
   updateMoveCount();
   updateOptimal(n);
-  renderCallStack();
+  setCallStackSize(n);
+  clearCallStack();
 
   stacks.forEach((stack) => {
     if (stack) stack.replaceChildren();
@@ -320,43 +394,44 @@ async function hanoi(n, src, dst, aux, timing, token) {
 
   const frame =
     `Hanoi(${n}, ${PEG_NAMES[src]}, ${PEG_NAMES[dst]}, ${PEG_NAMES[aux]})`;
-  callStack.push(frame);
-  renderCallStack();
+  pushCallFrame(frame);
 
-  const announce = shouldAnnounce(totalDisks, n);
+  try {
+    const announce = shouldAnnounce(totalDisks, n);
 
-  if (announce) {
-    setOperation(
-      "RECURSIVE CALL",
-      `${frame}\n` +
-        `1) Recurse: Hanoi(${n - 1}, ${PEG_NAMES[src]}, ${PEG_NAMES[aux]}, ${PEG_NAMES[dst]})\n` +
-        `2) move disk ${n} from ${PEG_NAMES[src]} to ${PEG_NAMES[dst]}\n` +
-        `3) Recurse: Hanoi(${n - 1}, ${PEG_NAMES[aux]}, ${PEG_NAMES[dst]}, ${PEG_NAMES[src]})`
-    );
-    await wait(timing.announce);
+    if (announce) {
+      setOperation(
+        "RECURSIVE CALL",
+        `${frame}\n` +
+          `1) Recurse: Hanoi(${n - 1}, ${PEG_NAMES[src]}, ${PEG_NAMES[aux]}, ${PEG_NAMES[dst]})\n` +
+          `2) move disk ${n} from ${PEG_NAMES[src]} to ${PEG_NAMES[dst]}\n` +
+          `3) Recurse: Hanoi(${n - 1}, ${PEG_NAMES[aux]}, ${PEG_NAMES[dst]}, ${PEG_NAMES[src]})`
+      );
+      await wait(timing.announce);
+      if (token !== runToken) return;
+    }
+
+    await hanoi(n - 1, src, aux, dst, timing, token);
     if (token !== runToken) return;
-  }
 
-  await hanoi(n - 1, src, aux, dst, timing, token);
-  if (token !== runToken) return;
-
-  await moveDisk(n, src, dst, timing, token);
-  if (token !== runToken) return;
-
-  if (announce) {
-    setOperation(
-      "RECURSIVE CALL",
-      `After moving disk ${n}, recurse again:\nHanoi(${n - 1}, ${PEG_NAMES[aux]}, ${PEG_NAMES[dst]}, ${PEG_NAMES[src]})`
-    );
-    await wait(timing.announce * 0.75);
+    await moveDisk(n, src, dst, timing, token);
     if (token !== runToken) return;
+
+    if (announce) {
+      setOperation(
+        "RECURSIVE CALL",
+        `After moving disk ${n}, recurse again:\nHanoi(${n - 1}, ${PEG_NAMES[aux]}, ${PEG_NAMES[dst]}, ${PEG_NAMES[src]})`
+      );
+      await wait(timing.announce * 0.75);
+      if (token !== runToken) return;
+    }
+
+    await hanoi(n - 1, aux, dst, src, timing, token);
+  } finally {
+    if (callStack.length > 0 && callStack[callStack.length - 1] === frame) {
+      popCallFrame();
+    }
   }
-
-  await hanoi(n - 1, aux, dst, src, timing, token);
-  if (token !== runToken) return;
-
-  callStack.pop();
-  renderCallStack();
 }
 
 async function runHanoi() {
@@ -402,7 +477,7 @@ async function runHanoi() {
   hanoiPaused = false;
   updatePlaybackControls();
   callStack = [];
-  renderCallStack();
+  clearCallStack();
 
   if (modeLabel) modeLabel.textContent = "DONE";
   setOperation(

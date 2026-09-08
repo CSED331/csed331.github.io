@@ -722,3 +722,29 @@
     margin: 0 4px;
   }
 }
+
+.graph-edge.is-considering .graph-edge-line {
+  stroke: #f6a700;
+  stroke-width: 5;
+}
+
+.graph-edge.is-mst-edge .graph-edge-line {
+  stroke: #a61955;
+  stroke-width: 5;
+}
+
+.graph-edge.is-rejected .graph-edge-line {
+  stroke: #7a7772;
+  stroke-width: 2;
+  opacity: 0.35;
+  stroke-dasharray: 7 6;
+}
+
+.graph-edge.is-rejected .graph-edge-weight-box,
+.graph-edge.is-rejected .graph-edge-weight {
+  opacity: 0.4;
+}
+
+.graph-node.is-root .graph-node-circle {
+  filter: drop-shadow(0 0 6px rgba(166, 25, 85, 0.28));
+}

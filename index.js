@@ -15,6 +15,7 @@ fib             Fibonacci easter egg
 hanoi           Hanoi easter egg
 sort            Sorting easter egg
 dijkstra        Dijkstra easter egg
+kruskal         Kruskal easter egg
 hello           Say hello
 about           About this course
 clear           Clear terminal
@@ -49,6 +50,7 @@ Fibonacci_Lab/             READY
 Hanoi_Lab/                 READY
 Sorting_Lab/               READY
 Dijkstra_Lab/              READY
+Kruskal_Lab/               READY
 `,
 
   hello: () => `
@@ -92,6 +94,16 @@ How can we find the shortest path in a graph?
 What if we have negative edge weights?
 `,
 
+  kruskal: () => `
+Minimum spanning tree detected...
+
+Sort edges by weight.
+Accept an edge only when find(u) ≠ find(v).
+Then union the two components.
+
+Try: cd kruskal_lab
+`,
+
   clear: () => {
     terminalOutput.innerHTML = "";
     return null;
@@ -103,7 +115,9 @@ const modules = {
   hanoi_lab: "hanoi.html",
   hanoi: "hanoi.html",
   sorting_lab: "sorting.html",
-  dijkstra_lab: "graph.html"
+  dijkstra_lab: "graph.html",
+  kruskal_lab: "kruskal.html",
+  kruskal: "kruskal.html"
 };
 
 function printLine(text, className = "") {

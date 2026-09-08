@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CSED331 Kruskal MST visualizer with Union-Find">
+  <title>Kruskal Lab | CSED331</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css?v=20260908j">
+  <link rel="stylesheet" href="animation.css?v=20260908j">
+</head>
+<body class="lab-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="lab-header">
+    <a class="back-link" href="index.html">← BACK TO WORKSTATION</a>
+    <div>
+      <span>CSED331</span>
+      <strong>KRUSKAL LAB</strong>
+    </div>
+    <span id="system-clock" aria-label="current time"></span>
+  </header>
+
+  <main class="lab-shell">
+    <section class="lab-intro">
+      <div>
+        <p class="eyebrow">GREEDY</p>
+        <h1>Kruskal Lab</h1>
+        <p class="lab-question">
+          Build a weighted undirected graph and watch Kruskal grow a minimum
+          spanning tree by sorting edges and merging components with Union-Find.
+        </p>
+      </div>
+
+      <div class="control-console">
+        <label for="random-node-count">NODES (2 ≤ n ≤ 12)</label>
+        <div class="input-row">
+          <input id="random-node-count" type="number" min="2" max="12" value="6">
+          <button id="random-graph-button" type="button">RANDOM GRAPH</button>
+        </div>
+        <p class="control-note">
+          Creates a random connected graph. Edge weights follow the
+          EDGE WEIGHT mode selected in the graph builder.
+        </p>
+      </div>
+    </section>
+
+    <section id="kruskal-graph-section" class="algorithm-window">
+      <header class="window-titlebar">
+        <span>GRAPH BUILDER</span>
+        <span id="graph-lock-label">EDIT MODE</span>
+      </header>
+
+      <div class="window-body">
+        <div class="graph-toolbar">
+          <button type="button" class="tool-button graph-edit-tool is-active" data-tool="node">+ NODE</button>
+          <button type="button" class="tool-button graph-edit-tool" data-tool="edge">+ EDGE</button>
+          <button type="button" class="tool-button graph-edit-tool" data-tool="move">MOVE</button>
+          <button type="button" class="tool-button graph-edit-tool" data-tool="delete">DELETE</button>
+          <button id="clear-graph-button" type="button" class="tool-button graph-clear-button">CLEAR</button>
+        </div>
+
+        <div class="weight-mode-row" role="group" aria-label="Edge weight mode">
+          <span class="weight-mode-label">EDGE WEIGHT</span>
+          <button
+            type="button"
+            class="tool-button weight-mode-button is-active"
+            data-weight-mode="euclidean"
+          >
+            EUCLIDEAN
+          </button>
+          <button
+            type="button"
+            class="tool-button weight-mode-button"
+            data-weight-mode="random"
+          >
+            RANDOM
+          </button>
+          <span id="weight-mode-note" class="weight-mode-hint">
+            click label to edit · moves update distance
+          </span>
+
+          <div class="graph-run-controls">
+            <button id="run-kruskal-button" type="button" class="primary-button">▶ RUN</button>
+            <button id="pause-kruskal-button" type="button" class="secondary-button" disabled>PAUSE</button>
+            <button id="resume-kruskal-button" type="button" class="secondary-button" disabled>RESUME</button>
+          </div>
+        </div>
+
+        <div id="graph-builder-message" class="graph-builder-message" aria-live="polite">
+          Click anywhere on the canvas to create a vertex, or generate a random graph.
+        </div>
+
+        <div class="kruskal-graph-workspace">
+          <div class="graph-canvas-wrapper kruskal-canvas-wrapper">
+            <svg
+              id="graph-canvas"
+              class="graph-canvas kruskal-canvas"
+              viewBox="0 0 1000 420"
+              role="img"
+              aria-label="Interactive graph builder"
+            >
+              <g id="graph-edge-layer"></g>
+              <g id="graph-edge-label-layer"></g>
+              <g id="graph-node-layer"></g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="kruskal-uf-section" class="algorithm-window">
+      <header class="window-titlebar">
+        <span>UNION-FIND</span>
+        <span id="kruskal-mode-label">READY</span>
+      </header>
+
+      <div class="window-body">
+        <div class="kruskal-uf-grid">
+          <section class="kruskal-uf-panel">
+            <div class="section-label">
+              <span>PARENT ARRAY</span>
+            </div>
+            <div id="uf-parent-array" class="uf-parent-array">
+              <div class="uf-empty">No sets yet.</div>
+            </div>
+          </section>
+
+          <section class="kruskal-uf-forest-panel">
+            <div class="section-label">
+              <span>FIND</span>
+            </div>
+            <div id="uf-forest" class="uf-forest">
+              <div class="uf-empty">Makeset(u) for every vertex will appear here.</div>
+            </div>
+          </section>
+        </div>
+
+        <div class="section-label">
+          <span>CURRENT OPERATION</span>
+        </div>
+        <div class="dijkstra-operation-box kruskal-current-operation">
+          <div id="kruskal-operation-title" class="current-operation-title">READY</div>
+          <div id="kruskal-operation-detail" class="current-operation-detail">
+            Build a connected weighted graph, then press RUN.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="algorithm-window">
+      <header class="window-titlebar">
+        <span>KRUSKAL</span>
+        <span>O(E log E)</span>
+      </header>
+      <div class="window-body">
+        <div class="code-block" aria-label="Kruskal pseudocode">
+<pre><code><span class="code-function-title">function Kruskal(G, w)</span>
+for all u ∈ V do
+    makeset(u)
+X ← {}
+Sort the edges in E by weight
+for all edges {u, v} ∈ E, in increasing order of weight do
+    if find(u) ≠ find(v) then
+        add edge {u, v} to X
+        union(u, v)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="analysis-box">
+      <div class="analysis-title">RUNNING TIME</div>
+      <div class="analysis-result">T = O(E log E)</div>
+      <div class="analysis-equation">
+        |V| makeset,&nbsp; 2|E| find,&nbsp; |V| − 1 union
+      </div>
+    </section>
+  </main>
+
+  <script src="common.js?v=20260908i"></script>
+  <script src="kruskal.js?v=20260908h"></script>
+</body>
+</html>

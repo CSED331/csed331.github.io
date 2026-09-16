@@ -17,6 +17,8 @@
  
  const DIJKSTRA_TIMING = {
  
+   init: 900,
+
    select: 950,
  
    inspectEdge: 1150,
@@ -681,7 +683,7 @@
        Math.max(
          50,
          Math.min(
-           550,
+           500,
            y
          )
        )
@@ -2368,7 +2370,7 @@
        Math.max(
          50,
          Math.min(
-           550,
+           500,
            point.y
          )
        );
@@ -3226,6 +3228,16 @@
    addLog(
      `dist(${getNode(graph.sourceId).label}) = 0`
    );
+
+   addLog(
+     `makequeue(V) → ${graph.nodes.length} vertices in H`
+   );
+
+   setOperation(
+     "makequeue(V)",
+     `H contains all ${graph.nodes.length} vertices.\n` +
+       `dist(${getNode(graph.sourceId).label}) = 0; others ∞`
+   );
  
  
    runButton.disabled =
@@ -3569,10 +3581,15 @@
    initializeDijkstra(
      "auto"
    );
- 
- 
+
    const token =
      runToken;
+
+   await wait(DIJKSTRA_TIMING.init);
+
+   if (token !== runToken) {
+     return;
+   }
  
  
    while (
@@ -4105,7 +4122,7 @@
      minX: 50,
      maxX: 950,
      minY: 50,
-     maxY: 550
+     maxY: 500
    };
    const cx = (bounds.minX + bounds.maxX) / 2;
    const cy = (bounds.minY + bounds.maxY) / 2;

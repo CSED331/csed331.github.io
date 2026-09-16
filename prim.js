@@ -37,7 +37,8 @@ const graph = {
   nodes: [],
   edges: [],
   nextNodeId: 0,
-  nextEdgeId: 0
+  nextEdgeId: 0,
+  sourceId: null
 };
 
 let weightMode = "euclidean";
@@ -182,6 +183,8 @@ function setTool(tool) {
     setBuilderMessage("Click anywhere on the canvas to create a vertex.");
   } else if (tool === "edge") {
     setBuilderMessage("Select two vertices to create an edge.");
+  } else if (tool === "source") {
+    setBuilderMessage("Select the source vertex for Prim.");
   } else if (tool === "move") {
     setBuilderMessage(
       weightMode === "euclidean"
@@ -218,7 +221,7 @@ function addNode(x, y) {
     id: `v${graph.nextNodeId}`,
     label: nodeLabel(graph.nextNodeId),
     x: Math.max(40, Math.min(960, x)),
-    y: Math.max(40, Math.min(380, y))
+    y: Math.max(40, Math.min(560, y))
   };
 
   graph.nextNodeId += 1;
@@ -233,7 +236,7 @@ function createNodeElement(node) {
   group.dataset.nodeId = node.id;
 
   const circle = document.createElementNS(SVG_NS, "circle");
-  circle.setAttribute("r", "24");
+  circle.setAttribute("r", "27");
   circle.classList.add("graph-node-circle");
 
   const label = document.createElementNS(SVG_NS, "text");
@@ -242,9 +245,19 @@ function createNodeElement(node) {
   label.setAttribute("text-anchor", "middle");
   label.setAttribute("dy", "5");
 
-  group.append(circle, label);
+  const dist = document.createElementNS(SVG_NS, "text");
+  dist.classList.add("graph-node-distance");
+  dist.setAttribute("text-anchor", "middle");
+  dist.setAttribute("y", "46");
+
+  const prev = document.createElementNS(SVG_NS, "text");
+  prev.classList.add("graph-node-prev");
+  prev.setAttribute("text-anchor", "middle");
+  prev.setAttribute("y", "66");
+
+  group.append(circle, label, dist, prev);
   nodeLayer.appendChild(group);
-  nodeElements.set(node.id, { group, circle, label });
+  nodeElements.set(node.id, { group, circle, label, dist, prev });
   updateNodePosition(node.id);
 
   group.addEventListener("pointerdown", (event) => {
@@ -803,6 +816,13 @@ function handleNodeClick(nodeId) {
     return;
   }
 
+  if (currentTool === "source") {
+    graph.sourceId = nodeId;
+    setBuilderMessage(`Source vertex: ${getNode(nodeId).label}`);
+    syncNodeClasses();
+    return;
+  }
+
   if (currentTool === "delete") deleteNode(nodeId);
 }
 
@@ -828,6 +848,7 @@ function deleteNode(nodeId) {
   if (element) element.group.remove();
   nodeElements.delete(nodeId);
   graph.nodes = graph.nodes.filter((node) => node.id !== nodeId);
+  if (graph.sourceId === nodeId) graph.sourceId = null;
   syncNodeClasses();
 }
 
@@ -837,6 +858,7 @@ function clearGraph(force = false) {
   graph.edges = [];
   graph.nextNodeId = 0;
   graph.nextEdgeId = 0;
+  graph.sourceId = null;
   nodeElements.clear();
   edgeElements.clear();
   nodeLayer.replaceChildren();
@@ -854,10 +876,26 @@ function syncNodeClasses() {
     const element = nodeElements.get(node.id);
     if (!element) return;
     const group = element.group;
+    group.classList.toggle("is-source", graph.sourceId === node.id);
     group.classList.toggle("is-edge-start", edgeStartNodeId === node.id);
+    group.classList.toggle("is-finalized", run.inTree.has(node.id));
+    group.classList.toggle(
+      "is-frontier",
+      (run.active || run.finished) &&
+        run.inHeap.has(node.id) &&
+        !run.inTree.has(node.id)
+    );
     group.classList.remove("is-component", "is-root");
     element.circle.style.stroke = "";
     element.circle.style.strokeWidth = "";
+
+    // Prim only shows SOURCE under the chosen start vertex — no dist/prev.
+    if (graph.sourceId === node.id) {
+      element.dist.textContent = "SOURCE";
+    } else {
+      element.dist.textContent = "";
+    }
+    element.prev.textContent = "";
   });
 }
 
@@ -990,9 +1028,9 @@ function renderPriorityQueue() {
 
   const n = queue.length;
   const depth = Math.floor(Math.log2(n)) + 1;
-  const nodeWidth = 84;
-  const nodeHeight = 52;
-  const levelGap = 78;
+  const nodeWidth = 68;
+  const nodeHeight = 44;
+  const levelGap = 72;
   const horizontalGap = 18;
   const leafCount = Math.pow(2, depth - 1);
   const treeWidth = Math.max(220, leafCount * (nodeWidth + horizontalGap));
@@ -1062,7 +1100,7 @@ function renderPriorityQueue() {
 
     const label = document.createElementNS(SVG_NS, "text");
     label.setAttribute("class", "pq-heap-label");
-    label.setAttribute("y", "-8");
+    label.setAttribute("y", "-5");
     label.setAttribute("text-anchor", "middle");
     label.setAttribute("dominant-baseline", "middle");
 
@@ -1087,6 +1125,17 @@ function renderPriorityQueue() {
     distance.textContent = costText;
 
     group.append(rect, label, distance);
+
+    if (isMin) {
+      const badge = document.createElementNS(SVG_NS, "text");
+      badge.setAttribute("class", "pq-heap-min-badge");
+      badge.setAttribute("x", String(nodeWidth / 2 - 2));
+      badge.setAttribute("y", String(-nodeHeight / 2 - 6));
+      badge.setAttribute("text-anchor", "end");
+      badge.textContent = "MIN";
+      group.appendChild(badge);
+    }
+
     heapNodeLayer.appendChild(group);
   });
 
@@ -1133,6 +1182,10 @@ function validateGraph() {
   }
   if (graph.edges.length === 0) {
     setBuilderMessage("Create at least one edge.");
+    return false;
+  }
+  if (graph.sourceId === null) {
+    setBuilderMessage("Choose a source vertex first.");
     return false;
   }
   if (!isUndirectedGraphConnected()) {
@@ -1220,7 +1273,7 @@ function resetExecution() {
   refreshPrimVisuals();
   setPrimOperation(
     "READY",
-    "Build a connected weighted graph, then press RUN."
+    "Build a connected weighted graph, choose a source, then press RUN."
   );
 }
 
@@ -1248,7 +1301,11 @@ async function runPrim() {
 
   scrollRunViewport();
 
-  const startNode = graph.nodes[0];
+  const startNode = getNode(graph.sourceId);
+  if (!startNode) {
+    setPrimOperation("NEED SOURCE", "Choose a source vertex first.");
+    return;
+  }
   run.startId = startNode.id;
 
   for (const node of graph.nodes) {
@@ -1643,7 +1700,7 @@ function generateRandomGraph() {
 
   clearGraph(true);
 
-  const bounds = { minX: 50, maxX: 950, minY: 40, maxY: 380 };
+  const bounds = { minX: 50, maxX: 950, minY: 50, maxY: 550 };
   placeRandomGraphNodes(n, bounds).forEach((point) => {
     addNode(point.x, point.y);
   });
@@ -1723,10 +1780,13 @@ function generateRandomGraph() {
 
   repairCrowdedEdges();
 
+  const sourceIndex = Math.floor(Math.random() * graph.nodes.length);
+  graph.sourceId = graph.nodes[sourceIndex].id;
+
   setTool("node");
   setEditingEnabled(true);
   setBuilderMessage(
-    "Click anywhere on the canvas to create a vertex, or generate a random graph."
+    `Random graph ready. Source: ${graph.nodes[sourceIndex].label}. Press RUN or change SOURCE.`
   );
   syncNodeClasses();
   syncEdgeClasses();
@@ -1747,7 +1807,7 @@ if (svg) {
     if (!node) return;
     const point = svgPoint(event);
     node.x = Math.max(40, Math.min(960, point.x));
-    node.y = Math.max(40, Math.min(380, point.y));
+    node.y = Math.max(40, Math.min(560, point.y));
     updateNodePosition(node.id);
     updateIncidentEdges(node.id);
   });

@@ -6,8 +6,8 @@
   <meta name="description" content="CSED331 Prim MST visualizer with Priority Queue">
   <title>Prim Lab | CSED331</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css?v=20260916t">
-  <link rel="stylesheet" href="animation.css?v=20260916t">
+  <link rel="stylesheet" href="styles.css?v=20260916x">
+  <link rel="stylesheet" href="animation.css?v=20260916x">
 </head>
 <body class="lab-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -56,6 +56,7 @@
         <div class="graph-toolbar">
           <button type="button" class="tool-button graph-edit-tool is-active" data-tool="node">+ NODE</button>
           <button type="button" class="tool-button graph-edit-tool" data-tool="edge">+ EDGE</button>
+          <button type="button" class="tool-button graph-edit-tool" data-tool="source">SOURCE</button>
           <button type="button" class="tool-button graph-edit-tool" data-tool="move">MOVE</button>
           <button type="button" class="tool-button graph-edit-tool" data-tool="delete">DELETE</button>
           <button id="clear-graph-button" type="button" class="tool-button graph-clear-button">CLEAR</button>
@@ -92,12 +93,12 @@
           Click anywhere on the canvas to create a vertex, or generate a random graph.
         </div>
 
-        <div class="prim-graph-workspace">
-          <div class="graph-canvas-wrapper prim-canvas-wrapper">
+        <div class="graph-workspace">
+          <div class="graph-canvas-wrapper">
             <svg
               id="graph-canvas"
-              class="graph-canvas prim-canvas"
-              viewBox="0 0 1000 420"
+              class="graph-canvas"
+              viewBox="0 0 1000 600"
               role="img"
               aria-label="Interactive graph builder"
             >
@@ -107,24 +108,33 @@
             </svg>
           </div>
 
-          <aside class="prim-pq-panel" aria-label="Priority queue binary heap">
+          <section class="priority-queue-panel">
             <div class="section-label">
               <span>PRIORITY QUEUE</span>
+              <span>binary min-heap</span>
             </div>
-            <div id="priority-queue" class="priority-queue prim-priority-queue">
+            <div id="priority-queue" class="priority-queue">
               <div class="pq-placeholder">Run Prim to initialize the queue.</div>
             </div>
-          </aside>
+          </section>
         </div>
+      </div>
+    </section>
 
+    <section class="algorithm-window">
+      <header class="window-titlebar">
+        <span>PRIM EXECUTION</span>
+        <span id="prim-mode-label">READY</span>
+      </header>
+
+      <div class="window-body">
         <div class="section-label">
           <span>CURRENT OPERATION</span>
-          <span id="prim-mode-label">READY</span>
         </div>
-        <div class="dijkstra-operation-box prim-current-operation">
+        <div class="dijkstra-operation-box">
           <div id="prim-operation-title" class="current-operation-title">READY</div>
           <div id="prim-operation-detail" class="current-operation-detail">
-            Build a connected weighted graph, then press RUN.
+            Build a connected weighted graph, choose a source, then press RUN.
           </div>
         </div>
       </div>
@@ -140,8 +150,8 @@
 <pre><code><span class="code-function-title">function Prim(G, w)</span>
 for all u ∈ V do
     cost(u) = ∞; prev(u) = nil
-Pick any initial node u₀ and set cost(u₀) = 0
-H = makequeue(V)
+Pick source node u₀ and set cost(u₀) = 0
+H = makequeue(cut edges from u₀)
 while H is not empty do
     v = deletemin(H)
     for each edge (v, z) ∈ E do
@@ -158,7 +168,7 @@ while H is not empty do
     </section>
   </main>
 
-  <script src="common.js?v=20260916t"></script>
-  <script src="prim.js?v=20260916t"></script>
+  <script src="common.js?v=20260916x"></script>
+  <script src="prim.js?v=20260916x"></script>
 </body>
 </html>

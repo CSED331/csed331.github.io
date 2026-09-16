@@ -1,20 +1,17 @@
 /* =========================================================
-   KRUSKAL LAB — graph builder + Union-Find animation
+   PRIM LAB — graph builder + binary-heap Prim MST animation
    ========================================================= */
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const PIXELS_PER_UNIT = 70;
 
-const KRUSKAL_TIMING = {
-  makeset: 280,
-  sortShow: 700,
-  consider: 650,
-  findStep: 520,
-  findResult: 480,
-  reject: 700,
-  accept: 550,
-  union: 900,
-  between: 280,
+const PRIM_TIMING = {
+  init: 500,
+  deletemin: 700,
+  scan: 400,
+  decrease: 550,
+  accept: 600,
+  between: 250,
   finish: 700
 };
 
@@ -24,19 +21,17 @@ const edgeLabelLayer = document.getElementById("graph-edge-label-layer");
 const nodeLayer = document.getElementById("graph-node-layer");
 const builderMessage = document.getElementById("graph-builder-message");
 const lockLabel = document.getElementById("graph-lock-label");
-const runButton = document.getElementById("run-kruskal-button");
-const pauseButton = document.getElementById("pause-kruskal-button");
-const resumeButton = document.getElementById("resume-kruskal-button");
+const runButton = document.getElementById("run-prim-button");
+const pauseButton = document.getElementById("pause-prim-button");
+const resumeButton = document.getElementById("resume-prim-button");
 const clearGraphButton = document.getElementById("clear-graph-button");
 const randomGraphButton = document.getElementById("random-graph-button");
 const randomNodeCountInput = document.getElementById("random-node-count");
 const weightModeNote = document.getElementById("weight-mode-note");
-const modeLabel = document.getElementById("kruskal-mode-label");
-const ufParentArray = document.getElementById("uf-parent-array");
-const ufForest = document.getElementById("uf-forest");
-const sortedEdgesList = document.getElementById("kruskal-sorted-edges");
-const opTitle = document.getElementById("kruskal-operation-title");
-const opDetail = document.getElementById("kruskal-operation-detail");
+const modeLabel = document.getElementById("prim-mode-label");
+const priorityQueueElement = document.getElementById("priority-queue");
+const opTitle = document.getElementById("prim-operation-title");
+const opDetail = document.getElementById("prim-operation-detail");
 
 const graph = {
   nodes: [],
@@ -59,21 +54,23 @@ function createEmptyRunState() {
   return {
     active: false,
     finished: false,
+    cost: new Map(),
+    prev: new Map(),
+    inHeap: new Set(),
+    inTree: new Set(),
+    heap: [],
+    heapPos: new Map(),
     mstEdgeIds: new Set(),
+    candidateEdgeIds: new Set(),
     consideringEdgeId: null,
-    rejectedEdgeIds: new Set(),
-    parent: new Map(),
-    rank: new Map(),
-    findHighlight: [],
-    unionHighlight: null
+    startId: null
   };
 }
 
 let run = createEmptyRunState();
 let runToken = 0;
-let kruskalPaused = false;
-let kruskalPlaying = false;
-let lastParentSnapshot = new Map();
+let primPaused = false;
+let primPlaying = false;
 
 function wait(ms) {
   return new Promise((resolve) => {
@@ -81,13 +78,13 @@ function wait(ms) {
     let sliceStart = performance.now();
 
     function tick() {
-      if (kruskalPaused) {
+      if (primPaused) {
         if (sliceStart !== null) {
           remaining -= Math.max(0, performance.now() - sliceStart);
           sliceStart = null;
         }
         const poll = () => {
-          if (kruskalPaused) {
+          if (primPaused) {
             window.setTimeout(poll, 40);
             return;
           }
@@ -123,6 +120,14 @@ function getEdge(edgeId) {
   return graph.edges.find((edge) => edge.id === edgeId);
 }
 
+function findEdgeBetween(nodeAId, nodeBId) {
+  return graph.edges.find(
+    (edge) =>
+      (edge.u === nodeAId && edge.v === nodeBId) ||
+      (edge.u === nodeBId && edge.v === nodeAId)
+  );
+}
+
 function nodeLabel(index) {
   let value = index + 1;
   let label = "";
@@ -149,9 +154,19 @@ function setBuilderMessage(text) {
   if (builderMessage) builderMessage.textContent = text;
 }
 
-function setKruskalOperation(title, detail) {
+function setPrimOperation(title, detail) {
   if (opTitle) opTitle.textContent = title;
   if (opDetail) opDetail.textContent = detail;
+}
+
+function formatEdgeWeight(weight) {
+  const rounded = Math.round(weight * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
+function formatCost(value) {
+  if (value === undefined || value === null || value === Infinity) return "∞";
+  return formatEdgeWeight(value);
 }
 
 function setTool(tool) {
@@ -295,7 +310,6 @@ function setWeightMode(mode) {
     updateEdgeGeometry(edge.id, { skipLabel: true });
   });
   relayoutAllEdgeLabels();
-  renderSortedEdges();
 }
 
 function addEdge(nodeAId, nodeBId) {
@@ -398,7 +412,6 @@ function closeWeightEditor(options = {}) {
       edge.userSet = true;
       updateEdgeGeometry(edge.id, { skipLabel: true });
       relayoutAllEdgeLabels();
-      renderSortedEdges();
     } else if (input.value.trim() !== "") {
       setBuilderMessage("Weight must be a positive number.");
     }
@@ -803,7 +816,6 @@ function deleteEdge(edgeId) {
   }
   graph.edges = graph.edges.filter((edge) => edge.id !== edgeId);
   edgeElements.delete(edgeId);
-  renderSortedEdges();
 }
 
 function deleteNode(nodeId) {
@@ -835,18 +847,6 @@ function clearGraph(force = false) {
   setBuilderMessage(
     "Click anywhere on the canvas to create a vertex, or generate a random graph."
   );
-  renderSortedEdges();
-}
-
-function findRootInstant(nodeId) {
-  let current = nodeId;
-  const seen = new Set();
-  while (run.parent.has(current) && run.parent.get(current) !== current) {
-    if (seen.has(current)) break;
-    seen.add(current);
-    current = run.parent.get(current);
-  }
-  return current;
 }
 
 function syncNodeClasses() {
@@ -861,76 +861,245 @@ function syncNodeClasses() {
   });
 }
 
+function rebuildCandidateEdges() {
+  run.candidateEdgeIds.clear();
+  if (!run.active && !run.finished) return;
+
+  run.inHeap.forEach((nodeId) => {
+    const cost = run.cost.get(nodeId);
+    const prevId = run.prev.get(nodeId);
+    if (prevId == null || cost === undefined || cost === Infinity) return;
+    const edge = findEdgeBetween(prevId, nodeId);
+    if (edge) run.candidateEdgeIds.add(edge.id);
+  });
+}
+
 function syncEdgeClasses() {
+  rebuildCandidateEdges();
   graph.edges.forEach((edge) => {
     const element = edgeElements.get(edge.id);
     if (!element) return;
     element.group.classList.toggle("is-mst-edge", run.mstEdgeIds.has(edge.id));
     element.group.classList.toggle(
       "is-considering",
-      run.consideringEdgeId === edge.id
-    );
-    element.group.classList.toggle(
-      "is-rejected",
-      run.rejectedEdgeIds.has(edge.id)
+      run.consideringEdgeId === edge.id || run.candidateEdgeIds.has(edge.id)
     );
   });
-  renderSortedEdges();
 }
 
-function formatEdgeWeight(weight) {
-  const rounded = Math.round(weight * 10) / 10;
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+/* =========================================================
+   Binary min-heap keyed by cost(u), with decrease-key
+   ========================================================= */
+
+function heapCost(nodeId) {
+  const value = run.cost.get(nodeId);
+  return value === undefined ? Infinity : value;
 }
 
-function getSortedEdges() {
-  return [...graph.edges].sort((a, b) => {
-    if (a.weight !== b.weight) return a.weight - b.weight;
-    return a.id.localeCompare(b.id);
+function heapSwap(i, j) {
+  const a = run.heap[i];
+  const b = run.heap[j];
+  run.heap[i] = b;
+  run.heap[j] = a;
+  run.heapPos.set(a, j);
+  run.heapPos.set(b, i);
+}
+
+function heapBubbleUp(index) {
+  let i = index;
+  while (i > 0) {
+    const parent = Math.floor((i - 1) / 2);
+    if (heapCost(run.heap[i]) >= heapCost(run.heap[parent])) break;
+    heapSwap(i, parent);
+    i = parent;
+  }
+}
+
+function heapBubbleDown(index) {
+  let i = index;
+  const n = run.heap.length;
+  while (true) {
+    const left = 2 * i + 1;
+    const right = 2 * i + 2;
+    let smallest = i;
+    if (left < n && heapCost(run.heap[left]) < heapCost(run.heap[smallest])) {
+      smallest = left;
+    }
+    if (right < n && heapCost(run.heap[right]) < heapCost(run.heap[smallest])) {
+      smallest = right;
+    }
+    if (smallest === i) break;
+    heapSwap(i, smallest);
+    i = smallest;
+  }
+}
+
+function heapInsert(nodeId) {
+  run.heap.push(nodeId);
+  run.heapPos.set(nodeId, run.heap.length - 1);
+  run.inHeap.add(nodeId);
+  heapBubbleUp(run.heap.length - 1);
+}
+
+function heapDeleteMin() {
+  if (run.heap.length === 0) return null;
+  const minId = run.heap[0];
+  const last = run.heap.pop();
+  run.heapPos.delete(minId);
+  run.inHeap.delete(minId);
+  if (run.heap.length > 0 && last !== minId) {
+    run.heap[0] = last;
+    run.heapPos.set(last, 0);
+    heapBubbleDown(0);
+  }
+  return minId;
+}
+
+function heapDecreaseKey(nodeId) {
+  const index = run.heapPos.get(nodeId);
+  if (index === undefined) return;
+  heapBubbleUp(index);
+}
+
+function getNeighbors(nodeId) {
+  const result = [];
+  graph.edges.forEach((edge) => {
+    if (edge.u === nodeId) result.push({ neighborId: edge.v, edge });
+    else if (edge.v === nodeId) result.push({ neighborId: edge.u, edge });
   });
+  return result;
 }
 
-function edgeEndpointLabel(edge) {
-  const nodeA = getNode(edge.u);
-  const nodeB = getNode(edge.v);
-  if (!nodeA || !nodeB) return "? - ?";
-  const labels = [nodeA.label, nodeB.label].sort((a, b) =>
-    a.localeCompare(b, undefined, { numeric: true })
-  );
-  return `${labels[0]} - ${labels[1]}`;
-}
+function renderPriorityQueue() {
+  if (!priorityQueueElement) return;
 
-function renderSortedEdges() {
-  if (!sortedEdgesList) return;
-
-  if (graph.edges.length === 0) {
-    sortedEdgesList.innerHTML = '<div class="uf-empty">No edges yet.</div>';
+  if (!run.active && !run.finished) {
+    priorityQueueElement.innerHTML =
+      '<div class="pq-placeholder">Run Prim to initialize the queue.</div>';
     return;
   }
 
-  const fragment = document.createDocumentFragment();
-  let currentRow = null;
+  const queue = run.heap.map((id) => getNode(id)).filter(Boolean);
+  priorityQueueElement.replaceChildren();
 
-  getSortedEdges().forEach((edge) => {
-    const row = document.createElement("div");
-    row.className = "kruskal-edge-row";
-    row.dataset.edgeId = edge.id;
-    row.textContent = `${edgeEndpointLabel(edge)}: ${formatEdgeWeight(edge.weight)}`;
+  if (queue.length === 0) {
+    priorityQueueElement.innerHTML =
+      '<div class="pq-placeholder">queue empty</div>';
+    return;
+  }
 
-    if (run.consideringEdgeId === edge.id) {
-      row.classList.add("is-current");
-      currentRow = row;
+  const n = queue.length;
+  const depth = Math.floor(Math.log2(n)) + 1;
+  const nodeWidth = 84;
+  const nodeHeight = 52;
+  const levelGap = 78;
+  const horizontalGap = 18;
+  const leafCount = Math.pow(2, depth - 1);
+  const treeWidth = Math.max(220, leafCount * (nodeWidth + horizontalGap));
+  const treeHeight = depth * levelGap + 24;
+  const positions = new Array(n);
+
+  function place(index, left, right, level) {
+    if (index >= n) return;
+    const x = (left + right) / 2;
+    const y = 18 + level * levelGap + nodeHeight / 2;
+    positions[index] = { x, y };
+    const mid = (left + right) / 2;
+    place(2 * index + 1, left, mid, level + 1);
+    place(2 * index + 2, mid, right, level + 1);
+  }
+
+  place(0, 0, treeWidth, 0);
+
+  const heapSvg = document.createElementNS(SVG_NS, "svg");
+  heapSvg.setAttribute("class", "pq-heap-svg");
+  heapSvg.setAttribute("viewBox", `0 0 ${treeWidth} ${treeHeight}`);
+  heapSvg.setAttribute("width", String(treeWidth));
+  heapSvg.setAttribute("height", String(treeHeight));
+  heapSvg.setAttribute("role", "img");
+  heapSvg.setAttribute("aria-label", "Priority queue as a binary min-heap");
+
+  const heapEdgeLayer = document.createElementNS(SVG_NS, "g");
+  const heapNodeLayer = document.createElementNS(SVG_NS, "g");
+  heapSvg.append(heapEdgeLayer, heapNodeLayer);
+
+  for (let i = 1; i < n; i += 1) {
+    const parent = Math.floor((i - 1) / 2);
+    const from = positions[parent];
+    const to = positions[i];
+    const line = document.createElementNS(SVG_NS, "line");
+    line.setAttribute("class", "pq-heap-edge");
+    line.setAttribute("x1", String(from.x));
+    line.setAttribute("y1", String(from.y + nodeHeight / 2 - 4));
+    line.setAttribute("x2", String(to.x));
+    line.setAttribute("y2", String(to.y - nodeHeight / 2 + 4));
+    heapEdgeLayer.appendChild(line);
+  }
+
+  queue.forEach((node, index) => {
+    const { x, y } = positions[index];
+    const isMin = index === 0;
+    const cost = run.cost.get(node.id);
+    const prevId = run.prev.get(node.id);
+    const prevNode = prevId != null ? getNode(prevId) : null;
+    const costText = formatCost(cost);
+    const showEdge = Boolean(prevNode && cost !== Infinity);
+
+    const group = document.createElementNS(SVG_NS, "g");
+    group.setAttribute(
+      "class",
+      isMin ? "pq-heap-node is-min" : "pq-heap-node"
+    );
+    group.setAttribute("transform", `translate(${x} ${y})`);
+
+    const rect = document.createElementNS(SVG_NS, "rect");
+    rect.setAttribute("class", "pq-heap-rect");
+    rect.setAttribute("x", String(-nodeWidth / 2));
+    rect.setAttribute("y", String(-nodeHeight / 2));
+    rect.setAttribute("width", String(nodeWidth));
+    rect.setAttribute("height", String(nodeHeight));
+    rect.setAttribute("rx", "7");
+
+    const label = document.createElementNS(SVG_NS, "text");
+    label.setAttribute("class", "pq-heap-label");
+    label.setAttribute("y", "-8");
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("dominant-baseline", "middle");
+
+    if (showEdge) {
+      const from = document.createElementNS(SVG_NS, "tspan");
+      from.textContent = node.label;
+      const arrow = document.createElementNS(SVG_NS, "tspan");
+      arrow.setAttribute("class", "pq-heap-arrow");
+      arrow.textContent = " → ";
+      const to = document.createElementNS(SVG_NS, "tspan");
+      to.textContent = prevNode.label;
+      label.append(from, arrow, to);
+    } else {
+      label.textContent = node.label;
     }
-    if (run.mstEdgeIds.has(edge.id)) row.classList.add("is-accepted");
-    if (run.rejectedEdgeIds.has(edge.id)) row.classList.add("is-rejected");
 
-    fragment.appendChild(row);
+    const distance = document.createElementNS(SVG_NS, "text");
+    distance.setAttribute("class", "pq-heap-distance");
+    distance.setAttribute("y", "12");
+    distance.setAttribute("text-anchor", "middle");
+    distance.setAttribute("dominant-baseline", "middle");
+    distance.textContent = costText;
+
+    group.append(rect, label, distance);
+    heapNodeLayer.appendChild(group);
   });
 
-  sortedEdgesList.replaceChildren(fragment);
-  if (currentRow) {
-    currentRow.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }
+  const scroll = document.createElement("div");
+  scroll.className = "pq-heap-scroll";
+  scroll.appendChild(heapSvg);
+  priorityQueueElement.appendChild(scroll);
+}
+
+function refreshPrimVisuals() {
+  syncNodeClasses();
+  syncEdgeClasses();
+  renderPriorityQueue();
 }
 
 function isUndirectedGraphConnected() {
@@ -976,111 +1145,23 @@ function validateGraph() {
 }
 
 function updatePlaybackControls() {
-  if (pauseButton) pauseButton.disabled = !kruskalPlaying || kruskalPaused;
-  if (resumeButton) resumeButton.disabled = !kruskalPlaying || !kruskalPaused;
-  if (runButton) runButton.disabled = kruskalPlaying;
+  if (pauseButton) pauseButton.disabled = !primPlaying || primPaused;
+  if (resumeButton) resumeButton.disabled = !primPlaying || !primPaused;
+  if (runButton) runButton.disabled = primPlaying;
 }
 
-function pauseKruskal() {
-  if (!kruskalPlaying || kruskalPaused) return;
-  kruskalPaused = true;
+function pausePrim() {
+  if (!primPlaying || primPaused) return;
+  primPaused = true;
   updatePlaybackControls();
   if (modeLabel) modeLabel.textContent = "PAUSED";
 }
 
-function resumeKruskal() {
-  if (!kruskalPlaying || !kruskalPaused) return;
-  kruskalPaused = false;
+function resumePrim() {
+  if (!primPlaying || !primPaused) return;
+  primPaused = false;
   updatePlaybackControls();
   if (modeLabel) modeLabel.textContent = "RUNNING";
-}
-
-function resetUfPanels() {
-  lastParentSnapshot = new Map();
-  if (ufParentArray) {
-    ufParentArray.innerHTML = '<div class="uf-empty">No sets yet.</div>';
-  }
-  if (ufForest) {
-    ufForest.innerHTML =
-      '<div class="uf-empty">Makeset(u) for every vertex will appear here.</div>';
-  }
-}
-
-
-function resetExecution() {
-  kruskalPaused = false;
-  kruskalPlaying = false;
-  runToken += 1;
-  run = createEmptyRunState();
-  setEditingEnabled(true);
-  if (modeLabel) modeLabel.textContent = "READY";
-  updatePlaybackControls();
-  syncNodeClasses();
-  syncEdgeClasses();
-  resetUfPanels();
-  setKruskalOperation(
-    "READY",
-    "Build a connected weighted graph, then press RUN."
-  );
-}
-
-function renderParentArray() {
-  if (!ufParentArray) return;
-  if (run.parent.size === 0) {
-    ufParentArray.innerHTML = '<div class="uf-empty">No sets yet.</div>';
-    lastParentSnapshot = new Map();
-    return;
-  }
-
-  const table = document.createElement("div");
-  table.className = "uf-parent-table";
-  table.setAttribute("role", "table");
-  table.setAttribute("aria-label", "Parent array parent[u]");
-
-  const labelCol = document.createElement("div");
-  labelCol.className = "uf-parent-col is-label-col";
-  labelCol.innerHTML =
-    '<div class="uf-parent-node is-label">u</div><div class="uf-parent-value is-label">parent[u]</div>';
-  table.appendChild(labelCol);
-
-  const nextSnapshot = new Map();
-
-  graph.nodes.forEach((node) => {
-    if (!run.parent.has(node.id)) return;
-
-    const parentId = run.parent.get(node.id);
-    const parentNode = getNode(parentId);
-    if (!parentNode) return;
-
-    nextSnapshot.set(node.id, parentId);
-    const prevParent = lastParentSnapshot.get(node.id);
-    const changed =
-      lastParentSnapshot.size > 0 &&
-      (prevParent === undefined || prevParent !== parentId);
-
-    const col = document.createElement("div");
-    col.className = "uf-parent-col";
-    if (run.findHighlight.includes(node.id)) col.classList.add("is-find-path");
-    if (run.unionHighlight && run.unionHighlight.includes(node.id)) {
-      col.classList.add("is-union");
-    }
-    if (parentId === node.id) col.classList.add("is-root-col");
-
-    const top = document.createElement("div");
-    top.className = "uf-parent-node";
-    top.textContent = node.label;
-
-    const bottom = document.createElement("div");
-    bottom.className = "uf-parent-value";
-    if (changed) bottom.classList.add("is-changed");
-    bottom.textContent = parentNode.label;
-
-    col.append(top, bottom);
-    table.appendChild(col);
-  });
-
-  ufParentArray.replaceChildren(table);
-  lastParentSnapshot = nextSnapshot;
 }
 
 function scrollRunViewport() {
@@ -1090,167 +1171,66 @@ function scrollRunViewport() {
   window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
 }
 
-function renderForest() {
-  if (!ufForest) return;
-  if (run.parent.size === 0) {
-    ufForest.innerHTML =
-      '<div class="uf-empty">Makeset(u) for every vertex will appear here.</div>';
-    return;
-  }
+async function relaxNeighbors(vId, token) {
+  const vNode = getNode(vId);
+  if (!vNode) return;
 
-  const children = new Map();
-  run.parent.forEach((_parent, nodeId) => {
-    children.set(nodeId, []);
-  });
+  for (const { neighborId, edge } of getNeighbors(vId)) {
+    if (token !== runToken) return;
+    if (run.inTree.has(neighborId)) continue;
 
-  run.parent.forEach((parent, nodeId) => {
-    if (parent !== nodeId && children.has(parent)) {
-      children.get(parent).push(nodeId);
+    const zNode = getNode(neighborId);
+    const oldCost = run.cost.get(neighborId);
+    const weight = edge.weight;
+
+    if (weight < oldCost) {
+      run.cost.set(neighborId, weight);
+      run.prev.set(neighborId, vId);
+      const alreadyInHeap = run.inHeap.has(neighborId);
+      if (alreadyInHeap) heapDecreaseKey(neighborId);
+      else heapInsert(neighborId);
+
+      run.consideringEdgeId = edge.id;
+      refreshPrimVisuals();
+      setPrimOperation(
+        alreadyInHeap ? "DECREASEKEY" : "INSERT",
+        `w(${vNode.label}, ${zNode.label}) = ${formatEdgeWeight(weight)}\n` +
+          `cost(${zNode.label}): ${formatCost(oldCost)} → ${formatCost(weight)}\n` +
+          `prev(${zNode.label}) = ${vNode.label}; ` +
+          (alreadyInHeap
+            ? `decreasekey(H, ${zNode.label})`
+            : `insert ${zNode.label} into H`)
+      );
+      await wait(PRIM_TIMING.decrease);
+      if (token !== runToken) return;
+      run.consideringEdgeId = null;
+      refreshPrimVisuals();
     }
-  });
+  }
+}
 
-  const roots = [...run.parent.keys()].filter(
-    (nodeId) => run.parent.get(nodeId) === nodeId
+function resetExecution() {
+  primPaused = false;
+  primPlaying = false;
+  runToken += 1;
+  run = createEmptyRunState();
+  setEditingEnabled(true);
+  if (modeLabel) modeLabel.textContent = "READY";
+  updatePlaybackControls();
+  refreshPrimVisuals();
+  setPrimOperation(
+    "READY",
+    "Build a connected weighted graph, then press RUN."
   );
-
-  function buildTree(nodeId) {
-    const node = getNode(nodeId);
-    if (!node) return document.createTextNode("");
-
-    const tree = document.createElement("div");
-    tree.className = "uf-tree-node";
-    if (run.parent.get(nodeId) === nodeId) tree.classList.add("is-root");
-
-    const badge = document.createElement("div");
-    badge.className = "uf-tree-badge";
-    badge.textContent = node.label;
-    tree.appendChild(badge);
-
-    const kids = children.get(nodeId) || [];
-    if (kids.length > 0) {
-      const childRow = document.createElement("div");
-      childRow.className = "uf-tree-children";
-      kids.forEach((childId) => childRow.appendChild(buildTree(childId)));
-      tree.appendChild(childRow);
-    }
-    return tree;
-  }
-
-  const findRoots = new Set(
-    run.findHighlight
-      .filter((id) => run.parent.has(id))
-      .map((id) => findRootInstant(id))
-  );
-  const unionRoots = new Set(
-    (run.unionHighlight || [])
-      .filter((id) => run.parent.has(id))
-      .map((id) => findRootInstant(id))
-  );
-
-  ufForest.replaceChildren();
-  const forest = document.createElement("div");
-  forest.className = "uf-forest-row";
-  roots.forEach((rootId) => {
-    const card = document.createElement("div");
-    card.className = "uf-component-card";
-    if (findRoots.has(rootId)) card.classList.add("is-find-set");
-    if (unionRoots.has(rootId)) card.classList.add("is-union-set");
-    card.appendChild(buildTree(rootId));
-    forest.appendChild(card);
-  });
-  ufForest.appendChild(forest);
 }
 
-function refreshUfVisuals() {
-  renderParentArray();
-  renderForest();
-  syncNodeClasses();
-}
-
-async function makesetAll(token) {
-  if (token !== runToken) return;
-
-  run.parent.clear();
-  run.rank.clear();
-  lastParentSnapshot = new Map();
-
-  for (const node of graph.nodes) {
-    run.parent.set(node.id, node.id);
-    run.rank.set(node.id, 0);
-  }
-
-  setKruskalOperation(
-    "INITIALIZE",
-    `for all u ∈ V do makeset(u)\nCreated |V| = ${graph.nodes.length} singleton sets`
-  );
-  refreshUfVisuals();
-  await wait(KRUSKAL_TIMING.makeset);
-}
-
-async function animatedFind(nodeId, token, label) {
-  const path = [];
-  let current = nodeId;
-
-  while (true) {
-    if (token !== runToken) return null;
-    path.push(current);
-    run.findHighlight = [...path];
-    refreshUfVisuals();
-
-    const parent = run.parent.get(current);
-
-    if (parent === current) {
-      await wait(KRUSKAL_TIMING.findResult);
-      break;
-    }
-
-    await wait(KRUSKAL_TIMING.findStep);
-    current = parent;
-  }
-
-  const root = current;
-  // Path compression
-  for (const id of path) {
-    if (id !== root) run.parent.set(id, root);
-  }
-  run.findHighlight = path;
-  refreshUfVisuals();
-  await wait(KRUSKAL_TIMING.findResult * 0.6);
-  run.findHighlight = [];
-  refreshUfVisuals();
-  return root;
-}
-
-async function animatedUnion(rootA, rootB, token) {
-  if (token !== runToken) return;
-  const rankA = run.rank.get(rootA);
-  const rankB = run.rank.get(rootB);
-
-  run.unionHighlight = [rootA, rootB];
-  refreshUfVisuals();
-
-  if (rankA < rankB) {
-    run.parent.set(rootA, rootB);
-  } else if (rankA > rankB) {
-    run.parent.set(rootB, rootA);
-  } else {
-    run.parent.set(rootB, rootA);
-    run.rank.set(rootA, rankA + 1);
-  }
-
-  refreshUfVisuals();
-  await wait(KRUSKAL_TIMING.union);
-  run.unionHighlight = null;
-  refreshUfVisuals();
-}
-
-async function startKruskal() {
+async function runPrim() {
   if (!validateGraph()) {
-    setKruskalOperation(
+    setPrimOperation(
       "NEED GRAPH",
       builderMessage
         ? builderMessage.textContent
-        : "Build a connected graph before running Kruskal."
+        : "Build a connected graph before running Prim."
     );
     return;
   }
@@ -1259,79 +1239,100 @@ async function startKruskal() {
   const token = runToken;
   run = createEmptyRunState();
   run.active = true;
-  kruskalPlaying = true;
-  kruskalPaused = false;
+  primPlaying = true;
+  primPaused = false;
   setEditingEnabled(false);
   if (runButton) runButton.disabled = true;
   if (modeLabel) modeLabel.textContent = "RUNNING";
   updatePlaybackControls();
-  syncEdgeClasses();
-  syncNodeClasses();
 
   scrollRunViewport();
 
-  const sortedEdges = getSortedEdges();
+  const startNode = graph.nodes[0];
+  run.startId = startNode.id;
 
-  setKruskalOperation("START", "X ← {}\nInitialize disjoint sets for every vertex.");
-  await makesetAll(token);
-  if (token !== runToken) return;
+  for (const node of graph.nodes) {
+    run.cost.set(node.id, Infinity);
+    run.prev.set(node.id, null);
+  }
+  run.cost.set(startNode.id, 0);
+  run.inTree.add(startNode.id);
 
-  setKruskalOperation(
-    "SORT EDGES",
-    `Sort |E| = ${sortedEdges.length} edges by increasing weight.`
+  setPrimOperation(
+    "INITIALIZE",
+    `cost(u) = ∞, prev(u) = nil for all u\n` +
+      `u₀ = ${startNode.label}, cost(${startNode.label}) = 0\n` +
+      `${startNode.label} starts in the tree; H fills with cut-edge candidates`
   );
-  await wait(KRUSKAL_TIMING.sortShow);
+  refreshPrimVisuals();
+  await wait(PRIM_TIMING.init);
   if (token !== runToken) return;
 
-  let mstCount = 0;
-  const need = graph.nodes.length - 1;
+  setPrimOperation(
+    "SCAN NEIGHBORS",
+    `for each edge (${startNode.label}, z) with z not yet in the tree`
+  );
+  refreshPrimVisuals();
+  await wait(PRIM_TIMING.scan);
+  if (token !== runToken) return;
 
-  for (const edge of sortedEdges) {
+  await relaxNeighbors(startNode.id, token);
+  if (token !== runToken) return;
+
+  while (run.heap.length > 0) {
     if (token !== runToken) return;
-    if (mstCount >= need) break;
 
-    const nodeA = getNode(edge.u);
-    const nodeB = getNode(edge.v);
-
-    run.consideringEdgeId = edge.id;
-    syncEdgeClasses();
-
-    setKruskalOperation(
-      "CONSIDER EDGE",
-      `Inspect {${nodeA.label}, ${nodeB.label}} with weight ${edge.weight.toFixed(1)}\nif find(${nodeA.label}) ≠ find(${nodeB.label}) then accept`
+    const minNode = getNode(run.heap[0]);
+    setPrimOperation(
+      "HEAP MIN",
+      `Highlight min of H → ${minNode.label}\n` +
+        `cost(${minNode.label}) = ${formatCost(run.cost.get(minNode.id))}`
     );
-    await wait(KRUSKAL_TIMING.consider);
+    refreshPrimVisuals();
+    await wait(PRIM_TIMING.deletemin);
     if (token !== runToken) return;
 
-    const rootA = await animatedFind(edge.u, token, nodeA.label);
-    if (token !== runToken) return;
-    const rootB = await animatedFind(edge.v, token, nodeB.label);
-    if (token !== runToken) return;
+    const vId = heapDeleteMin();
+    const vNode = getNode(vId);
+    const prevId = run.prev.get(vId);
+    run.inTree.add(vId);
 
-    if (rootA === rootB) {
-      run.rejectedEdgeIds.add(edge.id);
-      run.consideringEdgeId = null;
-      syncEdgeClasses();
-      setKruskalOperation(
-        "REJECT EDGE",
-        `find(${nodeA.label}) = find(${nodeB.label}) = ${getNode(rootA).label}\nSame component → skip (would form a cycle)`
-      );
-      await wait(KRUSKAL_TIMING.reject);
-    } else {
-      run.mstEdgeIds.add(edge.id);
-      mstCount += 1;
-      run.consideringEdgeId = null;
-      syncEdgeClasses();
-        setKruskalOperation(
-        "ACCEPT EDGE",
-        `find(${nodeA.label}) ≠ find(${nodeB.label})\nAdd {${nodeA.label}, ${nodeB.label}} to X  (${mstCount}/${need})`
-      );
-      await wait(KRUSKAL_TIMING.accept);
-      if (token !== runToken) return;
-      await animatedUnion(rootA, rootB, token);
+    if (prevId != null) {
+      const mstEdge = findEdgeBetween(prevId, vId);
+      if (mstEdge) {
+        run.consideringEdgeId = mstEdge.id;
+        refreshPrimVisuals();
+        setPrimOperation(
+          "ACCEPT EDGE",
+          `deletemin() → ${vNode.label}\n` +
+            `Add {${getNode(prevId).label}, ${vNode.label}} to MST` +
+            ` (w = ${formatEdgeWeight(mstEdge.weight)})`
+        );
+        await wait(PRIM_TIMING.accept);
+        if (token !== runToken) return;
+
+        run.mstEdgeIds.add(mstEdge.id);
+        run.consideringEdgeId = null;
+      }
     }
 
-    await wait(KRUSKAL_TIMING.between);
+    refreshPrimVisuals();
+    await wait(PRIM_TIMING.between);
+    if (token !== runToken) return;
+
+    const vLabel = vNode.label;
+    setPrimOperation(
+      "SCAN NEIGHBORS",
+      `for each edge (${vLabel}, z) with z not yet in the tree`
+    );
+    refreshPrimVisuals();
+    await wait(PRIM_TIMING.scan);
+    if (token !== runToken) return;
+
+    await relaxNeighbors(vId, token);
+    if (token !== runToken) return;
+
+    await wait(PRIM_TIMING.between);
   }
 
   if (token !== runToken) return;
@@ -1339,9 +1340,9 @@ async function startKruskal() {
   run.consideringEdgeId = null;
   run.active = false;
   run.finished = true;
-  kruskalPlaying = false;
-  kruskalPaused = false;
-  syncEdgeClasses();
+  primPlaying = false;
+  primPaused = false;
+  refreshPrimVisuals();
   updatePlaybackControls();
   if (modeLabel) modeLabel.textContent = "DONE";
   if (runButton) runButton.disabled = false;
@@ -1351,12 +1352,12 @@ async function startKruskal() {
     return sum + (edge ? edge.weight : 0);
   }, 0);
 
-  setKruskalOperation(
+  setPrimOperation(
     "COMPLETE",
-    `MST has ${run.mstEdgeIds.size} edges.\nTotal weight = ${totalWeight.toFixed(1)}`
+    `MST has ${run.mstEdgeIds.size} edges.\n` +
+      `Total weight = ${formatEdgeWeight(totalWeight)}`
   );
-  refreshUfVisuals();
-  await wait(KRUSKAL_TIMING.finish);
+  await wait(PRIM_TIMING.finish);
 }
 
 function shuffleInPlace(values) {
@@ -1752,7 +1753,6 @@ if (svg) {
   });
 
   svg.addEventListener("pointerup", (event) => {
-    if (draggingNodeId !== null) renderSortedEdges();
     draggingNodeId = null;
     if (svg.hasPointerCapture(event.pointerId)) {
       svg.releasePointerCapture(event.pointerId);
@@ -1789,13 +1789,14 @@ if (randomNodeCountInput) {
 if (runButton) {
   runButton.addEventListener("click", async () => {
     if (run.finished) resetExecution();
-    if (kruskalPlaying) return;
-    await startKruskal();
+    if (primPlaying) return;
+    await runPrim();
   });
 }
 
-if (pauseButton) pauseButton.addEventListener("click", pauseKruskal);
-if (resumeButton) resumeButton.addEventListener("click", resumeKruskal);
+if (pauseButton) pauseButton.addEventListener("click", pausePrim);
+if (resumeButton) resumeButton.addEventListener("click", resumePrim);
 
 updatePlaybackControls();
+renderPriorityQueue();
 setTool("node");

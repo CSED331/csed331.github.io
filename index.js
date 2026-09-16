@@ -16,6 +16,7 @@ hanoi           Hanoi easter egg
 sort            Sorting easter egg
 dijkstra        Dijkstra easter egg
 kruskal         Kruskal easter egg
+prim            Prim easter egg
 hello           Say hello
 about           About this course
 clear           Clear terminal
@@ -51,6 +52,7 @@ Hanoi_Lab/                 READY
 Sorting_Lab/               READY
 Dijkstra_Lab/              READY
 Kruskal_Lab/               READY
+Prim_Lab/                  READY
 `,
 
   hello: () => `
@@ -104,6 +106,15 @@ Then union the two components.
 Try: cd kruskal_lab
 `,
 
+  prim: () => `
+Minimum spanning tree detected...
+
+Grow the tree from one vertex.
+Always take the lightest cut edge via deletemin.
+
+Try: cd prim_lab
+`,
+
   clear: () => {
     terminalOutput.innerHTML = "";
     return null;
@@ -117,7 +128,9 @@ const modules = {
   sorting_lab: "sorting.html",
   dijkstra_lab: "graph.html",
   kruskal_lab: "kruskal.html",
-  kruskal: "kruskal.html"
+  kruskal: "kruskal.html",
+  prim_lab: "prim.html",
+  prim: "prim.html"
 };
 
 function printLine(text, className = "") {

@@ -1151,7 +1151,8 @@ p {
 
 .pq-heap-label,
 .pq-heap-distance,
-.pq-heap-min-badge {
+.pq-heap-min-badge,
+.pq-heap-arrow {
   font-family: var(--mono);
   pointer-events: none;
 }
@@ -1160,6 +1161,13 @@ p {
   fill: var(--text);
   font-size: 14px;
   font-weight: 900;
+}
+
+.pq-heap-arrow {
+  fill: var(--text);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
 }
 
 .pq-heap-distance {
@@ -1648,12 +1656,34 @@ p {
 
 .kruskal-graph-workspace {
   margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 168px;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .kruskal-canvas-wrapper {
   border: 1px solid var(--line-soft);
   border-radius: 7px;
   overflow: hidden;
+}
+
+.kruskal-edge-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #ffffff;
+  padding: 8px;
+}
+
+.kruskal-edge-panel .section-label {
+  margin-bottom: 6px;
+}
+
+.kruskal-edge-panel .section-label span {
+  font-size: 0.78rem;
 }
 
 .graph-canvas.kruskal-canvas {
@@ -1877,25 +1907,38 @@ p {
 .kruskal-edge-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.kruskal-edge-list .uf-empty {
+  padding: 14px 6px;
+  font-size: 0.78rem;
 }
 
 .kruskal-edge-row {
-  display: grid;
-  grid-template-columns: 42px 1fr auto;
-  gap: 10px;
+  display: flex;
   align-items: center;
-  padding: 8px 10px;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 7px;
   border: 1px solid var(--line-soft);
-  border-radius: 6px;
+  border-radius: 5px;
   background: #faf6f8;
   font-family: var(--mono);
-  font-size: 0.92rem;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
 }
 
 .kruskal-edge-row.is-current {
   border-color: var(--postech-gold);
-  background: rgba(246, 167, 0, 0.14);
+  background: rgba(246, 167, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(246, 167, 0, 0.35);
+  font-weight: 850;
 }
 
 .kruskal-edge-row.is-accepted {
@@ -1904,18 +1947,8 @@ p {
 }
 
 .kruskal-edge-row.is-rejected {
-  opacity: 0.45;
+  opacity: 0.4;
   text-decoration: line-through;
-}
-
-.kruskal-edge-index {
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.kruskal-edge-weight {
-  color: var(--highlight);
-  font-weight: 850;
 }
 
 @media (max-width: 820px) {
@@ -1924,9 +1957,70 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .kruskal-graph-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .kruskal-edge-list {
+    max-height: 160px;
+  }
+
   .graph-canvas.kruskal-canvas {
     min-height: 240px;
     max-height: 300px;
+  }
+}
+
+/* =========================================================
+   Prim Lab
+   ========================================================= */
+
+.prim-graph-workspace {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.prim-canvas-wrapper {
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.graph-canvas.prim-canvas {
+  min-height: 260px;
+  max-height: 320px;
+  aspect-ratio: 1000 / 420;
+}
+
+.prim-pq-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #fff;
+  padding: 8px;
+}
+
+.prim-priority-queue {
+  flex: 1;
+  min-height: 200px;
+  max-height: 320px;
+}
+
+.prim-current-operation {
+  min-height: 100px;
+  max-height: 140px;
+  overflow: auto;
+  margin-top: 4px;
+}
+
+@media (max-width: 820px) {
+  .prim-graph-workspace {
+    grid-template-columns: 1fr;
   }
 }
 

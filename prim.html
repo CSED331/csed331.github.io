@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="CSED331 Kruskal MST visualizer with Union-Find">
-  <title>Kruskal Lab | CSED331</title>
+  <meta name="description" content="CSED331 Prim MST visualizer with Priority Queue">
+  <title>Prim Lab | CSED331</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="styles.css?v=20260916t">
   <link rel="stylesheet" href="animation.css?v=20260916t">
@@ -16,7 +16,7 @@
     <a class="back-link" href="index.html">← BACK TO WORKSTATION</a>
     <div>
       <span>CSED331</span>
-      <strong>KRUSKAL LAB</strong>
+      <strong>PRIM LAB</strong>
     </div>
     <span id="system-clock" aria-label="current time"></span>
   </header>
@@ -25,10 +25,11 @@
     <section class="lab-intro">
       <div>
         <p class="eyebrow">GREEDY</p>
-        <h1>Kruskal Lab</h1>
+        <h1>Prim Lab</h1>
         <p class="lab-question">
-          Build a weighted undirected graph and watch Kruskal grow a minimum
-          spanning tree by sorting edges and merging components with Union-Find.
+          Build a weighted undirected graph and watch Prim grow a minimum
+          spanning tree by always taking the lightest cut edge from a binary
+          min-heap priority queue.
         </p>
       </div>
 
@@ -45,7 +46,7 @@
       </div>
     </section>
 
-    <section id="kruskal-graph-section" class="algorithm-window">
+    <section id="prim-graph-section" class="algorithm-window">
       <header class="window-titlebar">
         <span>GRAPH BUILDER</span>
         <span id="graph-lock-label">EDIT MODE</span>
@@ -81,9 +82,9 @@
           </span>
 
           <div class="graph-run-controls">
-            <button id="run-kruskal-button" type="button" class="primary-button">▶ RUN</button>
-            <button id="pause-kruskal-button" type="button" class="secondary-button" disabled>PAUSE</button>
-            <button id="resume-kruskal-button" type="button" class="secondary-button" disabled>RESUME</button>
+            <button id="run-prim-button" type="button" class="primary-button">▶ RUN</button>
+            <button id="pause-prim-button" type="button" class="secondary-button" disabled>PAUSE</button>
+            <button id="resume-prim-button" type="button" class="secondary-button" disabled>RESUME</button>
           </div>
         </div>
 
@@ -91,11 +92,11 @@
           Click anywhere on the canvas to create a vertex, or generate a random graph.
         </div>
 
-        <div class="kruskal-graph-workspace">
-          <div class="graph-canvas-wrapper kruskal-canvas-wrapper">
+        <div class="prim-graph-workspace">
+          <div class="graph-canvas-wrapper prim-canvas-wrapper">
             <svg
               id="graph-canvas"
-              class="graph-canvas kruskal-canvas"
+              class="graph-canvas prim-canvas"
               viewBox="0 0 1000 420"
               role="img"
               aria-label="Interactive graph builder"
@@ -106,51 +107,23 @@
             </svg>
           </div>
 
-          <aside class="kruskal-edge-panel" aria-label="Edges sorted by weight">
+          <aside class="prim-pq-panel" aria-label="Priority queue binary heap">
             <div class="section-label">
-              <span>SORTED EDGES</span>
+              <span>PRIORITY QUEUE</span>
             </div>
-            <div id="kruskal-sorted-edges" class="kruskal-edge-list">
-              <div class="uf-empty">No edges yet.</div>
+            <div id="priority-queue" class="priority-queue prim-priority-queue">
+              <div class="pq-placeholder">Run Prim to initialize the queue.</div>
             </div>
           </aside>
-        </div>
-      </div>
-    </section>
-
-    <section id="kruskal-uf-section" class="algorithm-window">
-      <header class="window-titlebar">
-        <span>UNION-FIND</span>
-        <span id="kruskal-mode-label">READY</span>
-      </header>
-
-      <div class="window-body">
-        <div class="kruskal-uf-grid">
-          <section class="kruskal-uf-panel">
-            <div class="section-label">
-              <span>PARENT ARRAY</span>
-            </div>
-            <div id="uf-parent-array" class="uf-parent-array">
-              <div class="uf-empty">No sets yet.</div>
-            </div>
-          </section>
-
-          <section class="kruskal-uf-forest-panel">
-            <div class="section-label">
-              <span>DISJOINT SET</span>
-            </div>
-            <div id="uf-forest" class="uf-forest">
-              <div class="uf-empty">Makeset(u) for every vertex will appear here.</div>
-            </div>
-          </section>
         </div>
 
         <div class="section-label">
           <span>CURRENT OPERATION</span>
+          <span id="prim-mode-label">READY</span>
         </div>
-        <div class="dijkstra-operation-box kruskal-current-operation">
-          <div id="kruskal-operation-title" class="current-operation-title">READY</div>
-          <div id="kruskal-operation-detail" class="current-operation-detail">
+        <div class="dijkstra-operation-box prim-current-operation">
+          <div id="prim-operation-title" class="current-operation-title">READY</div>
+          <div id="prim-operation-detail" class="current-operation-detail">
             Build a connected weighted graph, then press RUN.
           </div>
         </div>
@@ -159,34 +132,33 @@
 
     <section class="algorithm-window">
       <header class="window-titlebar">
-        <span>KRUSKAL</span>
-        <span>O(E log E)</span>
+        <span>PRIM</span>
+        <span>O(|E| log |V|)</span>
       </header>
       <div class="window-body">
-        <div class="code-block" aria-label="Kruskal pseudocode">
-<pre><code><span class="code-function-title">function Kruskal(G, w)</span>
+        <div class="code-block" aria-label="Prim pseudocode">
+<pre><code><span class="code-function-title">function Prim(G, w)</span>
 for all u ∈ V do
-    makeset(u)
-X ← {}
-Sort the edges in E by weight
-for all edges {u, v} ∈ E, in increasing order of weight do
-    if find(u) ≠ find(v) then
-        add edge {u, v} to X
-        union(u, v)</code></pre>
+    cost(u) = ∞; prev(u) = nil
+Pick any initial node u₀ and set cost(u₀) = 0
+H = makequeue(V)
+while H is not empty do
+    v = deletemin(H)
+    for each edge (v, z) ∈ E do
+        if cost(z) &gt; w(v, z) then
+            cost(z) = w(v, z); prev(z) = v
+            decreasekey(H, z)</code></pre>
         </div>
       </div>
     </section>
 
     <section class="analysis-box">
       <div class="analysis-title">RUNNING TIME</div>
-      <div class="analysis-result">T = O(E log E)</div>
-      <div class="analysis-equation">
-        |V| makeset,&nbsp; 2|E| find,&nbsp; |V| − 1 union
-      </div>
+      <div class="analysis-result">T = O(|E| log |V|)</div>
     </section>
   </main>
 
   <script src="common.js?v=20260916t"></script>
-  <script src="kruskal.js?v=20260916t"></script>
+  <script src="prim.js?v=20260916t"></script>
 </body>
 </html>

@@ -1076,9 +1076,11 @@
 
      edge.weight = assignEdgeWeight(nodeA, nodeB);
      edge.userSet = false;
-     updateEdgeElement(edge.id, false);
+     updateEdgeElement(edge.id, false, { skipLabel: true });
 
    });
+
+   relayoutAllEdgeLabels();
 
  }
  
@@ -1431,7 +1433,8 @@
 
        edge.weight = round1(value);
        edge.userSet = true;
-       updateEdgeElement(edge.id, false);
+       updateEdgeElement(edge.id, false, { skipLabel: true });
+       relayoutAllEdgeLabels();
 
      } else if (input.value.trim() !== "") {
 
@@ -1583,8 +1586,18 @@
  
  function updateEdgeElement(
    edgeId,
-   refreshWeight = false
+   refreshWeight = false,
+   options = {}
  ) {
+
+   if (
+     refreshWeight &&
+     typeof refreshWeight === "object"
+   ) {
+     options = refreshWeight;
+     refreshWeight = options.refreshWeight === true;
+   }
+
  
    const edge =
      getEdge(
@@ -1674,67 +1687,291 @@
    );
  
  
-   const midX =
-     (
-       nodeA.x +
-       nodeB.x
-     ) / 2;
- 
- 
-   const midY =
-     (
-       nodeA.y +
-       nodeB.y
-     ) / 2;
+
+   if (options.skipLabel) {
+     element.weight.textContent = edge.weight.toFixed(1);
+     return;
+   }
+
+   const avoidCenters =
+     options.avoidCenters || collectEdgeLabelCenters(edgeId);
+   const pos = chooseEdgeLabelPosition(edge, avoidCenters);
+   applyEdgeLabelPosition(edgeId, pos.x, pos.y);
+
+ }
 
 
-   /*
-     Offset the label perpendicular to the edge so the line
-     does not run straight through the weight text.
-   */
+ function collectEdgeLabelCenters(exceptEdgeId = null) {
+
+   const centers = [];
+
+   graph.edges.forEach(edge => {
+
+     if (exceptEdgeId && edge.id === exceptEdgeId) {
+       return;
+     }
+
+     const element = edgeElements.get(edge.id);
+
+     if (!element) {
+       return;
+     }
+
+     const x = Number(element.weight.getAttribute("x"));
+     const y = Number(element.weight.getAttribute("y"));
+
+     if (Number.isFinite(x) && Number.isFinite(y)) {
+       centers.push({ x, y });
+     }
+
+   });
+
+   return centers;
+
+ }
+
+
+ function distPointToSegment(px, py, ax, ay, bx, by) {
+   const dx = bx - ax;
+   const dy = by - ay;
+   const len2 = dx * dx + dy * dy || 1;
+   let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+   t = Math.max(0, Math.min(1, t));
+   return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+ }
+
+ const LABEL_HALF_W = 30;
+ const LABEL_HALF_H = 16;
+
+ function labelSamplePoints(x, y) {
+   const wx = LABEL_HALF_W * 0.85;
+   const hy = LABEL_HALF_H * 0.85;
+   return [
+     { x, y },
+     { x: x - wx, y },
+     { x: x + wx, y },
+     { x, y: y - hy },
+     { x, y: y + hy },
+     { x: x - wx, y: y - hy },
+     { x: x + wx, y: y - hy },
+     { x: x - wx, y: y + hy },
+     { x: x + wx, y: y + hy }
+   ];
+ }
+
+ function weightLabelsOverlap(x1, y1, x2, y2) {
+   return (
+     Math.abs(x1 - x2) < LABEL_HALF_W * 2.15 &&
+     Math.abs(y1 - y2) < LABEL_HALF_H * 2.15
+   );
+ }
+
+ function minDistLabelToOtherEdges(x, y, edge) {
+   let minDist = Infinity;
+   const samples = labelSamplePoints(x, y);
+   graph.edges.forEach((other) => {
+     if (other.id === edge.id) return;
+     const oA = getNode(other.u);
+     const oB = getNode(other.v);
+     if (!oA || !oB) return;
+     samples.forEach((sample) => {
+       const d = distPointToSegment(
+         sample.x,
+         sample.y,
+         oA.x,
+         oA.y,
+         oB.x,
+         oB.y
+       );
+       if (d < minDist) minDist = d;
+     });
+   });
+   return minDist;
+ }
+
+ function labelConflictScore(x, y, edge, avoidCenters) {
+   let score = 0;
+
+   avoidCenters.forEach((center) => {
+     if (weightLabelsOverlap(x, y, center.x, center.y)) score += 40;
+     else {
+       const dx = Math.abs(x - center.x);
+       const dy = Math.abs(y - center.y);
+       if (dx < LABEL_HALF_W * 2.6 && dy < LABEL_HALF_H * 2.6) {
+         score += 8;
+       }
+     }
+   });
+
+   const edgeClearance = minDistLabelToOtherEdges(x, y, edge);
+   // Hard: label footprint sits on another edge.
+   if (edgeClearance < 12) score += 80;
+   else if (edgeClearance < 18) score += 35;
+   else if (edgeClearance < 26) score += 12;
+   else if (edgeClearance < 34) score += 3;
+
+   graph.nodes.forEach((node) => {
+     if (node.id === edge.u || node.id === edge.v) return;
+     if (Math.hypot(x - node.x, y - node.y) < 40) score += 10;
+   });
+
+   const nodeA = getNode(edge.u);
+   const nodeB = getNode(edge.v);
+   if (nodeA && Math.hypot(x - nodeA.x, y - nodeA.y) < 36) score += 8;
+   if (nodeB && Math.hypot(x - nodeB.x, y - nodeB.y) < 36) score += 8;
+
+   // Prefer roomy spots so the weight clearly belongs to this edge only.
+   score += Math.max(0, 30 - Math.min(edgeClearance, 30)) * 0.4;
+   return score;
+ }
+
+ function homeLabelPosition(edge) {
+   const nodeA = getNode(edge.u);
+   const nodeB = getNode(edge.v);
+   const midX = (nodeA.x + nodeB.x) / 2;
+   const midY = (nodeA.y + nodeB.y) / 2;
    const dx = nodeB.x - nodeA.x;
    const dy = nodeB.y - nodeA.y;
    const length = Math.hypot(dx, dy) || 1;
-   const offset = 16;
-   const labelX = midX - (dy / length) * offset;
-   const labelY = midY + (dx / length) * offset;
- 
- 
-   element.weightBox.setAttribute(
-     "x",
-     labelX - 31
-   );
- 
- 
-   element.weightBox.setAttribute(
-     "y",
-     labelY - 17
-   );
- 
- 
-   element.weight.setAttribute(
-     "x",
-     labelX
-   );
- 
- 
-   element.weight.setAttribute(
-     "y",
-     labelY
-   );
- 
- 
-   element.weight.textContent =
-     edge.weight.toFixed(1);
- 
+   const nx = -dy / length;
+   const ny = dx / length;
+   const upSide = ny <= 0 ? 1 : -1;
+   const offset = 13;
+   return {
+     x: midX + nx * offset * upSide,
+     y: midY + ny * offset * upSide,
+     nx,
+     ny,
+     dx,
+     dy,
+     length,
+     upSide,
+     offset,
+     nodeA,
+     nodeB
+   };
  }
- 
- 
- 
- /* =========================================================
-    UPDATE INCIDENT EDGES
-    ========================================================= */
- 
+
+ function pointOnEdgeLabel(home, t, side, offset) {
+   const ax = home.nodeA.x + home.dx * t;
+   const ay = home.nodeA.y + home.dy * t;
+   return {
+     x: ax + home.nx * offset * side,
+     y: ay + home.ny * offset * side,
+     t
+   };
+ }
+
+ function chooseEdgeLabelPosition(edge, avoidCenters) {
+   const home = homeLabelPosition(edge);
+
+   // Dense samples along the edge — move clearly when something conflicts.
+   const tValues = [];
+   for (let i = 0; i <= 28; i += 1) {
+     tValues.push(0.12 + (0.76 * i) / 28);
+   }
+
+   const candidates = [];
+   for (const t of tValues) {
+     candidates.push({
+       ...pointOnEdgeLabel(home, t, home.upSide, home.offset),
+       rank: 0
+     });
+   }
+   for (const t of tValues) {
+     candidates.push({
+       ...pointOnEdgeLabel(home, t, -home.upSide, home.offset),
+       rank: 1
+     });
+   }
+   for (const offset of [11, 15, 18, 22]) {
+     for (const side of [home.upSide, -home.upSide]) {
+       for (const t of tValues) {
+         candidates.push({
+           ...pointOnEdgeLabel(home, t, side, offset),
+           rank: offset === home.offset ? 1 : 2
+         });
+       }
+     }
+   }
+
+   let best = { x: home.x, y: home.y, t: 0.5 };
+   let bestKey = null;
+
+   candidates.forEach((candidate) => {
+     const conflicts = labelConflictScore(
+       candidate.x,
+       candidate.y,
+       edge,
+       avoidCenters
+     );
+     const clearance = minDistLabelToOtherEdges(
+       candidate.x,
+       candidate.y,
+       edge
+     );
+     const along = Math.abs(candidate.t - 0.5);
+     // Minimize conflicts first, then maximize clearance from other edges,
+     // then keep closer to midpoint / preferred side.
+     const key =
+       conflicts * 100000 +
+       Math.max(0, 40 - clearance) * 200 +
+       candidate.rank * 80 +
+       along * 25;
+     if (bestKey === null || key < bestKey) {
+       bestKey = key;
+       best = candidate;
+     }
+   });
+
+   return { x: best.x, y: best.y };
+ }
+
+ function applyEdgeLabelPosition(edgeId, labelX, labelY) {
+   const edge = getEdge(edgeId);
+   const element = edgeElements.get(edgeId);
+   if (!edge || !element) return;
+   element.weightBox.setAttribute("x", labelX - 31);
+   element.weightBox.setAttribute("y", labelY - 17);
+   element.weight.setAttribute("x", labelX);
+   element.weight.setAttribute("y", labelY);
+   element.weight.textContent = edge.weight.toFixed(1);
+ }
+
+ function relayoutAllEdgeLabels() {
+   graph.edges.forEach((edge) => {
+     updateEdgeElement(edge.id, false, { skipLabel: true });
+   });
+
+   const ordered = [...graph.edges].sort((a, b) => {
+     const a1 = getNode(a.u);
+     const a2 = getNode(a.v);
+     const b1 = getNode(b.u);
+     const b2 = getNode(b.v);
+     const da = Math.hypot(a1.x - a2.x, a1.y - a2.y);
+     const db = Math.hypot(b1.x - b2.x, b1.y - b2.y);
+     return db - da;
+   });
+   const positions = new Map();
+
+   function placePass() {
+     ordered.forEach((edge) => {
+       const avoid = [];
+       positions.forEach((pos, id) => {
+         if (id !== edge.id) avoid.push(pos);
+       });
+       const pos = chooseEdgeLabelPosition(edge, avoid);
+       positions.set(edge.id, pos);
+       applyEdgeLabelPosition(edge.id, pos.x, pos.y);
+     });
+   }
+
+   // Multiple passes so labels can slide away from each other and other edges.
+   placePass();
+   placePass();
+   placePass();
+ }
+
  function updateIncidentEdges(
    nodeId
  ) {
@@ -1748,9 +1985,13 @@
      .forEach(
        edge =>
          updateEdgeElement(
-           edge.id
+           edge.id,
+           false,
+           { skipLabel: true }
          )
      );
+
+   relayoutAllEdgeLabels();
  
  }
  
@@ -3857,52 +4098,90 @@
 
 
    /*
-     Mitchell's best-candidate sampling: for each vertex try a
-     handful of random points and keep the one that sits
-     farthest from everything placed so far. This scatters the
-     vertices over the whole canvas while still keeping the
-     circles and weight labels from overlapping.
+     Scatter vertices across the full canvas with best-candidate
+     sampling, preferring spread away from the center.
    */
-   const minX = 80;
-   const maxX = 920;
-   const minY = 90;
-   const maxY = 510;
-
+   const bounds = {
+     minX: 50,
+     maxX: 950,
+     minY: 50,
+     maxY: 550
+   };
+   const cx = (bounds.minX + bounds.maxX) / 2;
+   const cy = (bounds.minY + bounds.maxY) / 2;
+   const width = bounds.maxX - bounds.minX;
+   const height = bounds.maxY - bounds.minY;
+   const minDist = Math.max(
+     105,
+     Math.min(160, (width + height) / (n * 1.15))
+   );
    const placed = [];
 
    for (let i = 0; i < n; i += 1) {
-
      let best = null;
-     let bestDistance = -1;
-
-     for (let attempt = 0; attempt < 25; attempt += 1) {
-
+     let bestScore = -Infinity;
+     for (let attempt = 0; attempt < 70; attempt += 1) {
        const candidate = {
-         x: minX + Math.random() * (maxX - minX),
-         y: minY + Math.random() * (maxY - minY)
+         x: bounds.minX + Math.random() * width,
+         y: bounds.minY + Math.random() * height
        };
-
        let nearest = Infinity;
-
        for (const point of placed) {
          nearest = Math.min(
            nearest,
            Math.hypot(candidate.x - point.x, candidate.y - point.y)
          );
        }
-
-       if (nearest > bestDistance) {
+       const distCenter = Math.hypot(
+         candidate.x - cx,
+         candidate.y - cy
+       );
+       const score =
+         (placed.length === 0 ? distCenter : nearest) +
+         distCenter * 0.2;
+       if (score > bestScore) {
          best = candidate;
-         bestDistance = nearest;
+         bestScore = score;
        }
-
      }
-
      placed.push(best);
-
-     addNode(best.x, best.y);
-
    }
+
+   for (let iter = 0; iter < 60; iter += 1) {
+     for (let i = 0; i < n; i += 1) {
+       for (let j = i + 1; j < n; j += 1) {
+         const dx = placed[j].x - placed[i].x;
+         const dy = placed[j].y - placed[i].y;
+         const dist = Math.hypot(dx, dy) || 0.01;
+         if (dist >= minDist) {
+           continue;
+         }
+         const push = ((minDist - dist) / dist) * 0.6;
+         const ox = dx * push * 0.5;
+         const oy = dy * push * 0.5;
+         placed[i].x = Math.max(
+           bounds.minX,
+           Math.min(bounds.maxX, placed[i].x - ox)
+         );
+         placed[i].y = Math.max(
+           bounds.minY,
+           Math.min(bounds.maxY, placed[i].y - oy)
+         );
+         placed[j].x = Math.max(
+           bounds.minX,
+           Math.min(bounds.maxX, placed[j].x + ox)
+         );
+         placed[j].y = Math.max(
+           bounds.minY,
+           Math.min(bounds.maxY, placed[j].y + oy)
+         );
+       }
+     }
+   }
+
+   placed.forEach((point) => {
+     addNode(point.x, point.y);
+   });
 
 
    const nodeIds = graph.nodes.map(node => node.id);
@@ -3921,7 +4200,7 @@
 
    /*
      Union-Find: first build a spanning tree (n - 1 edges),
-     then add extra edges up to a random connected count.
+     then add a modest number of longer extra edges.
    */
    const parent = {};
 
@@ -3947,43 +4226,263 @@
    }
 
 
-   const minEdges = n - 1;
-   const maxEdges = (n * (n - 1)) / 2;
-   const edgeTarget =
-     minEdges +
-     Math.floor(Math.random() * (maxEdges - minEdges + 1));
+   function pairDistance(idA, idB) {
+     const nodeA = getNode(idA);
+     const nodeB = getNode(idB);
+     if (!nodeA || !nodeB) {
+       return 0;
+     }
+     return Math.hypot(nodeA.x - nodeB.x, nodeA.y - nodeB.y);
+   }
 
+
+   function edgesShareVertex(edgeA, edgeB) {
+     return (
+       edgeA.u === edgeB.u ||
+       edgeA.u === edgeB.v ||
+       edgeA.v === edgeB.u ||
+       edgeA.v === edgeB.v
+     );
+   }
+
+   function sharedVertexId(edgeA, edgeB) {
+     if (edgeA.u === edgeB.u || edgeA.u === edgeB.v) return edgeA.u;
+     if (edgeA.v === edgeB.u || edgeA.v === edgeB.v) return edgeA.v;
+     return null;
+   }
+
+   function edgesVisuallyTooClose(edgeA, edgeB) {
+     const a1 = getNode(edgeA.u);
+     const a2 = getNode(edgeA.v);
+     const b1 = getNode(edgeB.u);
+     const b2 = getNode(edgeB.v);
+     if (!a1 || !a2 || !b1 || !b2) return false;
+
+     const shared = sharedVertexId(edgeA, edgeB);
+     if (shared != null) {
+       const otherA = edgeA.u === shared ? edgeA.v : edgeA.u;
+       const otherB = edgeB.u === shared ? edgeB.v : edgeB.u;
+       const s = getNode(shared);
+       const p = getNode(otherA);
+       const q = getNode(otherB);
+       if (!s || !p || !q) return false;
+       const v1x = p.x - s.x;
+       const v1y = p.y - s.y;
+       const v2x = q.x - s.x;
+       const v2y = q.y - s.y;
+       const l1 = Math.hypot(v1x, v1y) || 1;
+       const l2 = Math.hypot(v2x, v2y) || 1;
+       const cos = (v1x * v2x + v1y * v2y) / (l1 * l2);
+       // Same hub, nearly the same direction → looks like overlapping parallel edges.
+       if (cos >= 0.88) return true;
+       const spokeSep = Math.min(
+         distPointToSegment(p.x, p.y, s.x, s.y, q.x, q.y),
+         distPointToSegment(q.x, q.y, s.x, s.y, p.x, p.y)
+       );
+       if (cos >= 0.72 && spokeSep < 20) return true;
+       return false;
+     }
+
+     // Disjoint endpoints: parallel is fine; only reject near-coincident overlap.
+     const sep = Math.min(
+       distPointToSegment(a1.x, a1.y, b1.x, b1.y, b2.x, b2.y),
+       distPointToSegment(a2.x, a2.y, b1.x, b1.y, b2.x, b2.y),
+       distPointToSegment(b1.x, b1.y, a1.x, a1.y, a2.x, a2.y),
+       distPointToSegment(b2.x, b2.y, a1.x, a1.y, a2.x, a2.y)
+     );
+     return sep < 14;
+   }
+   function pairClearance(nodeAId, nodeBId) {
+     const probe = { id: "__probe__", u: nodeAId, v: nodeBId };
+     let clearance = Infinity;
+     graph.edges.forEach((edge) => {
+       if (edgesShareVertex(probe, edge)) return;
+       const a1 = getNode(probe.u);
+       const a2 = getNode(probe.v);
+       const b1 = getNode(edge.u);
+       const b2 = getNode(edge.v);
+       if (!a1 || !a2 || !b1 || !b2) return;
+       const sep = Math.min(
+         distPointToSegment(a1.x, a1.y, b1.x, b1.y, b2.x, b2.y),
+         distPointToSegment(a2.x, a2.y, b1.x, b1.y, b2.x, b2.y),
+         distPointToSegment(b1.x, b1.y, a1.x, a1.y, a2.x, a2.y),
+         distPointToSegment(b2.x, b2.y, a1.x, a1.y, a2.x, a2.y)
+       );
+       clearance = Math.min(clearance, sep);
+     });
+     return clearance === Infinity ? 1000 : clearance;
+   }
+
+   function pairWouldBeTooClose(nodeAId, nodeBId) {
+     const probe = { id: "__probe__", u: nodeAId, v: nodeBId };
+     return graph.edges.some((edge) => edgesVisuallyTooClose(probe, edge));
+   }
+
+   function edgeExistsBetween(nodeAId, nodeBId) {
+     return graph.edges.some(
+       (edge) =>
+         (edge.u === nodeAId && edge.v === nodeBId) ||
+         (edge.u === nodeBId && edge.v === nodeAId)
+     );
+   }
+
+   function isBridgeEdge(edgeId) {
+     const edge = getEdge(edgeId);
+     if (!edge) return true;
+     const kept = graph.edges.filter((item) => item.id !== edgeId);
+     const saved = graph.edges;
+     graph.edges = kept;
+     const connected = isUndirectedGraphConnected();
+     graph.edges = saved;
+     return !connected;
+   }
+
+   function countCloseConflicts(edge) {
+     let count = 0;
+     graph.edges.forEach((other) => {
+       if (other.id === edge.id) return;
+       if (edgesVisuallyTooClose(edge, other)) count += 1;
+     });
+     return count;
+   }
+
+   function repairCrowdedEdges() {
+     let guard = 0;
+     while (guard < 80) {
+       guard += 1;
+       let conflict = null;
+       for (let i = 0; i < graph.edges.length && !conflict; i += 1) {
+         for (let j = i + 1; j < graph.edges.length; j += 1) {
+           if (edgesVisuallyTooClose(graph.edges[i], graph.edges[j])) {
+             conflict = [graph.edges[i], graph.edges[j]];
+             break;
+           }
+         }
+       }
+       if (!conflict) break;
+
+       const [edgeA, edgeB] = conflict;
+       const scoreA =
+         countCloseConflicts(edgeA) * 10 - pairDistance(edgeA.u, edgeA.v) * 0.01;
+       const scoreB =
+         countCloseConflicts(edgeB) * 10 - pairDistance(edgeB.u, edgeB.v) * 0.01;
+       const ordered = scoreA >= scoreB ? [edgeA, edgeB] : [edgeB, edgeA];
+
+       let removed = null;
+       for (const edge of ordered) {
+         if (!isBridgeEdge(edge.id)) {
+           removed = edge;
+           break;
+         }
+       }
+       if (!removed) {
+         // Both are bridges: drop one and reconnect with a clear detour if possible.
+         removed = ordered[0];
+         deleteEdge(removed.id);
+         const options = [];
+         for (let i = 0; i < graph.nodes.length; i += 1) {
+           for (let j = i + 1; j < graph.nodes.length; j += 1) {
+             const a = graph.nodes[i].id;
+             const b = graph.nodes[j].id;
+             if (edgeExistsBetween(a, b)) continue;
+             if (pairDistance(a, b) < 140) continue;
+             if (pairWouldBeTooClose(a, b)) continue;
+             options.push([a, b, pairClearance(a, b)]);
+           }
+         }
+         options.sort((p, q) => q[2] - p[2]);
+         let reconnected = false;
+         for (const [a, b] of options) {
+           addEdge(a, b);
+           if (isUndirectedGraphConnected()) {
+             reconnected = true;
+             break;
+           }
+           // undo last add
+           const last = graph.edges[graph.edges.length - 1];
+           if (last) deleteEdge(last.id);
+         }
+         if (!reconnected) {
+           // restore removed bridge if we failed
+           addEdge(removed.u, removed.v);
+           break;
+         }
+         continue;
+       }
+
+       deleteEdge(removed.id);
+
+       const options = [];
+       for (let i = 0; i < graph.nodes.length; i += 1) {
+         for (let j = i + 1; j < graph.nodes.length; j += 1) {
+           const a = graph.nodes[i].id;
+           const b = graph.nodes[j].id;
+           if (edgeExistsBetween(a, b)) continue;
+           if (pairDistance(a, b) < 140) continue;
+           if (pairWouldBeTooClose(a, b)) continue;
+           options.push([a, b, pairClearance(a, b)]);
+         }
+       }
+       options.sort((p, q) => q[2] - p[2] || pairDistance(q[0], q[1]) - pairDistance(p[0], p[1]));
+       if (options.length > 0) {
+         const top = options.slice(0, Math.min(8, options.length));
+         const pick = top[Math.floor(Math.random() * top.length)];
+         addEdge(pick[0], pick[1]);
+       }
+     }
+   }
+
+   const minEdges = n - 1;
+   const maxExtra = Math.max(1, Math.floor(n * 0.7));
+   const edgeTarget =
+     minEdges + Math.floor(Math.random() * (maxExtra + 1));
 
    let edgeCount = 0;
-   const leftover = [];
 
-
-   for (const [a, b] of possible) {
-
-     if (edgeCount < minEdges && unite(a, b)) {
-       addEdge(a, b);
-       edgeCount += 1;
-     } else {
-       leftover.push([a, b]);
+   while (edgeCount < minEdges) {
+     let best = null;
+     let bestScore = -Infinity;
+     for (const [a, b] of possible) {
+       if (find(a) === find(b)) continue;
+       const closePenalty = pairWouldBeTooClose(a, b) ? 5000 : 0;
+       const clearance = pairClearance(a, b);
+       const score = clearance * 4 + pairDistance(a, b) * 0.02 - closePenalty;
+       if (score > bestScore) {
+         bestScore = score;
+         best = [a, b];
+       }
      }
-
+     if (!best) break;
+     unite(best[0], best[1]);
+     addEdge(best[0], best[1]);
+     edgeCount += 1;
    }
 
-
-   shuffleInPlace(leftover);
-
-
+   const leftover = [];
+   for (const [a, b] of possible) {
+     if (edgeExistsBetween(a, b)) continue;
+     leftover.push([a, b]);
+   }
+   leftover.sort((pairA, pairB) => {
+     const clearA = pairClearance(pairA[0], pairA[1]);
+     const clearB = pairClearance(pairB[0], pairB[1]);
+     if (clearA !== clearB) return clearB - clearA;
+     return (
+       pairDistance(pairB[0], pairB[1]) -
+       pairDistance(pairA[0], pairA[1])
+     );
+   });
+   const minExtraLength = 110;
    for (const [a, b] of leftover) {
-
-     if (edgeCount >= edgeTarget) {
-       break;
-     }
-
+     if (edgeCount >= edgeTarget) break;
+     if (pairDistance(a, b) < minExtraLength) continue;
+     if (pairWouldBeTooClose(a, b)) continue;
+     if (pairClearance(a, b) < 48) continue;
      addEdge(a, b);
      edgeCount += 1;
-
    }
 
+   repairCrowdedEdges();
 
    const sourceIndex =
      Math.floor(Math.random() * graph.nodes.length);
@@ -4002,6 +4501,7 @@
 
    syncNodeClasses();
    syncEdgeClasses();
+   relayoutAllEdgeLabels();
 
  }
 

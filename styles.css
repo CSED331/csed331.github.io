@@ -1982,3 +1982,370 @@ p {
   font-size: 1.05rem;
   font-weight: 700;
 }
+
+/* =========================================================
+   Edit Distance Lab
+   ========================================================= */
+
+.lab-intro:has(.edit-control-console) {
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: start;
+}
+
+.edit-control-console {
+  max-width: 560px;
+  width: 100%;
+  justify-self: end;
+}
+
+.edit-control-console .edit-string-row,
+.edit-control-console .edit-run-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+.edit-control-console .edit-string-input {
+  width: 100%;
+  min-width: 0;
+  letter-spacing: 0.04em;
+}
+
+.edit-control-console .edit-run-row {
+  margin-top: 4px;
+}
+
+.edit-control-console .edit-run-row .primary-button {
+  width: 100%;
+  padding: 12px 16px;
+}
+
+.edit-execution-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.95fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.edit-table-container {
+  overflow: auto;
+  min-height: 280px;
+  padding: 8px 4px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.edit-dp-table {
+  border-collapse: separate;
+  border-spacing: 4px;
+  margin: 0 auto;
+  font-family: var(--mono);
+}
+
+.edit-dp-table th,
+.edit-dp-table td {
+  min-width: 42px;
+  height: 42px;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: 800;
+}
+
+.edit-corner,
+.edit-col-label,
+.edit-row-label {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  background: transparent;
+}
+
+.edit-col-label,
+.edit-row-label {
+  color: var(--accent);
+  font-size: 1.05rem;
+}
+
+.edit-gap {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.edit-cell {
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: #faf6f8;
+  color: transparent;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.edit-cell.is-filled {
+  color: var(--text);
+  background: #ffffff;
+}
+
+.edit-cell.is-dep {
+  background: rgba(246, 167, 0, 0.14);
+  border-color: #d79a20;
+  color: var(--text);
+}
+
+.edit-cell.is-chosen {
+  background: rgba(11, 122, 72, 0.14);
+  border-color: #0b7a48;
+  box-shadow: 0 0 0 2px rgba(11, 122, 72, 0.18);
+  color: var(--text);
+}
+
+.edit-cell.is-current {
+  background: rgba(166, 25, 85, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(166, 25, 85, 0.2);
+  color: var(--text);
+  transform: scale(1.04);
+}
+
+.edit-cell.is-just-filled {
+  animation: edit-cell-pop 420ms ease;
+}
+
+.edit-cell.is-path {
+  background: rgba(166, 25, 85, 0.16);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.edit-operation-box {
+  height: 240px;
+  min-height: 240px;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.edit-operation-box.is-showing-transform {
+  height: auto;
+  min-height: 240px;
+  max-height: 420px;
+}
+
+.edit-operation-box .current-operation-detail {
+  margin-bottom: 0;
+}
+
+.edit-operation-box .edit-transform-host {
+  margin-top: 10px;
+  padding: 0;
+}
+
+.edit-operation-box .edit-transform-strip {
+  padding: 12px 14px;
+  max-width: none;
+  width: 100%;
+}
+
+.edit-result-box {
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.edit-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+
+.edit-result-row span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.edit-result-row strong {
+  color: var(--accent);
+  font-size: 1.6rem;
+}
+
+.edit-alignment-block {
+  margin-top: 10px;
+}
+
+.edit-alignment-block .section-label {
+  margin-top: 0;
+}
+
+.edit-alignment {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #faf6f8;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.edit-transform-section {
+  margin-top: 18px;
+}
+
+.edit-transform-host {
+  overflow: auto;
+  padding: 4px 0 8px;
+}
+
+.edit-transform-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  min-width: min-content;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: #ece7ea;
+}
+
+.edit-transform-strip.is-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  max-width: 520px;
+}
+
+.edit-transform-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: min-content;
+}
+
+.edit-transform-flow.is-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+}
+
+.edit-transform-node {
+  flex: 0 0 auto;
+}
+
+.edit-transform-string {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.4em;
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #111111;
+  white-space: nowrap;
+}
+
+.edit-tf-char {
+  display: inline-block;
+  min-width: 0.7em;
+  text-align: center;
+}
+
+.edit-tf-char.is-blue {
+  color: #1d4ed8;
+}
+
+.edit-tf-char.is-red {
+  color: #c02525;
+}
+
+.edit-transform-bridge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  padding: 0 4px 2px;
+}
+
+.edit-transform-bridge.is-vertical {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 2px 0 2px 8px;
+}
+
+.edit-transform-op {
+  color: #111111;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.edit-transform-bridge.is-vertical .edit-transform-op {
+  margin-bottom: 0;
+  order: 2;
+}
+
+.edit-transform-arrow {
+  color: #111111;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.edit-transform-bridge.is-vertical .edit-transform-arrow {
+  order: 1;
+  font-size: 1.15rem;
+}
+
+.edit-transform-distance {
+  flex: 0 0 auto;
+  margin-left: 8px;
+  color: #111111;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+
+.edit-transform-strip.is-vertical .edit-transform-distance {
+  margin-left: 0;
+  margin-top: 4px;
+  padding-bottom: 0;
+}
+
+@media (max-width: 820px) {
+  .edit-execution-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes edit-cell-pop {
+  0% {
+    transform: scale(0.92);
+  }
+  55% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

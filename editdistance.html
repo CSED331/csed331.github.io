@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CSED331 Edit Distance dynamic programming visualizer">
+  <title>Edit Distance Lab | CSED331</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="styles.css?v=20261011n">
+  <link rel="stylesheet" href="animation.css?v=20261011n">
+</head>
+<body class="lab-page">
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="lab-header">
+    <a class="back-link" href="index.html">← BACK TO WORKSTATION</a>
+    <div>
+      <span>CSED331</span>
+      <strong>EDIT DISTANCE LAB</strong>
+    </div>
+    <span id="system-clock" aria-label="current time"></span>
+  </header>
+
+  <main class="lab-shell">
+    <section class="lab-intro">
+      <div>
+        <p class="eyebrow">DYNAMIC PROGRAMMING</p>
+        <h1>Edit Distance</h1>
+        <p class="lab-question">
+          What is the minimum number of insertions, deletions, and
+          substitutions needed to transform one string into another?
+        </p>
+      </div>
+
+      <div class="control-console edit-control-console">
+        <label for="string-x-input">STRING X (1–20 letters)</label>
+        <div class="input-row edit-string-row">
+          <input
+            id="string-x-input"
+            class="edit-string-input"
+            type="text"
+            maxlength="20"
+            value="SNOWY"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="String X"
+          >
+        </div>
+        <label for="string-y-input">STRING Y (1–20 letters)</label>
+        <div class="input-row edit-string-row">
+          <input
+            id="string-y-input"
+            class="edit-string-input"
+            type="text"
+            maxlength="20"
+            value="SUNNY"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="String Y"
+          >
+        </div>
+        <div class="input-row edit-run-row">
+          <button id="run-edit-button" type="button" class="primary-button">▶ RUN</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="sort-input-panel">
+      <div class="action-row">
+        <button id="example-snowy-button" type="button" class="secondary-button">
+          EXAMPLE: SNOWY → SUNNY
+        </button>
+        <button id="example-exp-button" type="button" class="secondary-button">
+          EXAMPLE: EXPONENTIAL → POLYNOMIAL
+        </button>
+        <button id="example-heekap-button" type="button" class="secondary-button">
+          EXAMPLE: HEEKAP → HEAP
+        </button>
+      </div>
+      <p id="edit-input-message" class="input-message" aria-live="polite"></p>
+    </section>
+
+    <section id="edit-visualization" class="algorithm-window">
+      <header class="window-titlebar">
+        <span>DP TABLE EXECUTION</span>
+        <span id="edit-mode-label">READY</span>
+      </header>
+      <div class="window-body">
+        <div class="action-row playback-row">
+          <button id="pause-edit-button" type="button" class="secondary-button" disabled>
+            PAUSE
+          </button>
+          <button id="resume-edit-button" type="button" class="secondary-button" disabled>
+            RESUME
+          </button>
+          <button id="stop-edit-button" type="button" class="secondary-button" disabled>
+            STOP
+          </button>
+        </div>
+
+        <div class="edit-execution-grid">
+          <section class="edit-table-panel">
+            <div class="section-label">
+              <span>TABLE E[i, j]</span>
+              <span>prefix X[1···i] vs Y[1···j]</span>
+            </div>
+            <div id="edit-table-container" class="edit-table-container">
+              <div class="visualization-placeholder">
+                Enter two strings and press RUN.
+              </div>
+            </div>
+          </section>
+
+          <section class="edit-side-panel">
+            <div class="section-label">
+              <span>CURRENT OPERATION</span>
+            </div>
+            <div class="dijkstra-operation-box edit-operation-box">
+              <div id="edit-operation-title" class="current-operation-title">READY</div>
+              <div id="edit-operation-detail" class="current-operation-detail">
+                Build the edit-distance table by filling base cases, then each
+                interior cell from its three neighbors.
+              </div>
+              <div id="edit-transform" class="edit-transform-host" hidden></div>
+            </div>
+
+            <div class="section-label">
+              <span>ALIGNMENT</span>
+            </div>
+            <div class="edit-result-box">
+              <pre id="edit-alignment" class="edit-alignment">—</pre>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="algorithm-window">
+      <header class="window-titlebar">
+        <span>EDIT DISTANCE</span>
+        <span>O(mn)</span>
+      </header>
+      <div class="window-body">
+        <div class="code-block" aria-label="Edit distance pseudocode">
+<pre><code><span class="code-function-title">editdistance(X[1···m], Y[1···n])</span>
+
+for i ← 0 to m do
+    E[i, 0] ← i
+for j ← 1 to n do
+    E[0, j] ← j
+for i ← 1 to m do
+    for j ← 1 to n do
+        E[i, j] ← min{
+            E[i − 1, j] + 1,
+            E[i, j − 1] + 1,
+            E[i − 1, j − 1] + diff(i, j)
+        }
+return E[m, n]</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="analysis-box">
+      <div class="analysis-title">RUNNING TIME</div>
+      <div class="analysis-result">T = O(mn)</div>
+    </section>
+  </main>
+
+  <script src="common.js?v=20261011n"></script>
+  <script src="editdistance.js?v=20261011n"></script>
+</body>
+</html>

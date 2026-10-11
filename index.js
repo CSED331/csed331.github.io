@@ -17,6 +17,7 @@ sort            Sorting easter egg
 dijkstra        Dijkstra easter egg
 kruskal         Kruskal easter egg
 prim            Prim easter egg
+edit            Edit Distance easter egg
 hello           Say hello
 about           About this course
 clear           Clear terminal
@@ -53,6 +54,7 @@ Sorting_Lab/               READY
 Dijkstra_Lab/              READY
 Kruskal_Lab/               READY
 Prim_Lab/                  READY
+Edit_Distance_Lab/         READY
 `,
 
   hello: () => `
@@ -115,6 +117,15 @@ Always take the lightest cut edge via deletemin.
 Try: cd prim_lab
 `,
 
+  edit: () => `
+Edit distance detected...
+
+Fill E[i, j] from prefixes of X and Y.
+Three choices: delete, insert, substitute/match.
+
+Try: cd edit_distance_lab
+`,
+
   clear: () => {
     terminalOutput.innerHTML = "";
     return null;
@@ -130,7 +141,11 @@ const modules = {
   kruskal_lab: "kruskal.html",
   kruskal: "kruskal.html",
   prim_lab: "prim.html",
-  prim: "prim.html"
+  prim: "prim.html",
+  edit_distance_lab: "editdistance.html",
+  editdistance_lab: "editdistance.html",
+  editdistance: "editdistance.html",
+  edit: "editdistance.html"
 };
 
 function printLine(text, className = "") {

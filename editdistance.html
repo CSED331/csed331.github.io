@@ -6,8 +6,8 @@
   <meta name="description" content="CSED331 Edit Distance dynamic programming visualizer">
   <title>Edit Distance Lab | CSED331</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="styles.css?v=20261011n">
-  <link rel="stylesheet" href="animation.css?v=20261011n">
+  <link rel="stylesheet" href="styles.css?v=20261011o">
+  <link rel="stylesheet" href="animation.css?v=20261011o">
 </head>
 <body class="lab-page">
   <div class="scanlines" aria-hidden="true"></div>
@@ -68,13 +68,13 @@
     <section class="sort-input-panel">
       <div class="action-row">
         <button id="example-snowy-button" type="button" class="secondary-button">
-          EXAMPLE: SNOWY → SUNNY
+          Example1: SNOWY → SUNNY
         </button>
         <button id="example-exp-button" type="button" class="secondary-button">
-          EXAMPLE: EXPONENTIAL → POLYNOMIAL
+          Example2: EXPONENTIAL → POLYNOMIAL
         </button>
         <button id="example-heekap-button" type="button" class="secondary-button">
-          EXAMPLE: HEEKAP → HEAP
+          Example3: HEEKAP → HEAP
         </button>
       </div>
       <p id="edit-input-message" class="input-message" aria-live="polite"></p>
@@ -86,15 +86,15 @@
         <span id="edit-mode-label">READY</span>
       </header>
       <div class="window-body">
-        <div class="action-row playback-row">
+        <div class="action-row playback-row edit-playback-row">
           <button id="pause-edit-button" type="button" class="secondary-button" disabled>
             PAUSE
           </button>
           <button id="resume-edit-button" type="button" class="secondary-button" disabled>
             RESUME
           </button>
-          <button id="stop-edit-button" type="button" class="secondary-button" disabled>
-            STOP
+          <button id="stop-edit-button" type="button" class="secondary-button edit-reset-button" disabled>
+            RESET
           </button>
         </div>
 
@@ -166,7 +166,7 @@ return E[m, n]</code></pre>
     </section>
   </main>
 
-  <script src="common.js?v=20261011n"></script>
-  <script src="editdistance.js?v=20261011n"></script>
+  <script src="common.js?v=20261011o"></script>
+  <script src="editdistance.js?v=20261011o"></script>
 </body>
 </html>

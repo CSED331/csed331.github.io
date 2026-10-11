@@ -441,27 +441,23 @@ async function fillBaseCases(token) {
     "E[i, 0] = i  (delete all of X[1···i])\nE[0, j] = j  (insert all of Y[1···j])"
   );
 
+  clearHighlights();
   for (let i = 0; i <= m; i += 1) {
-    if (token !== runToken) return;
-    clearHighlights();
     table[i][0] = i;
     choice[i][0] = i === 0 ? null : "delete";
-    highlightCell(i, 0, "is-current");
     setCellValue(i, 0, i, true);
-    setOperation("BASE CASE", `E[${i}, 0] ← ${i}`);
-    await wait(TIMING.base);
+    highlightCell(i, 0, "is-current");
   }
-
   for (let j = 1; j <= n; j += 1) {
-    if (token !== runToken) return;
-    clearHighlights();
     table[0][j] = j;
     choice[0][j] = "insert";
-    highlightCell(0, j, "is-current");
     setCellValue(0, j, j, true);
-    setOperation("BASE CASE", `E[0, ${j}] ← ${j}`);
-    await wait(TIMING.base);
+    highlightCell(0, j, "is-current");
   }
+
+  await wait(TIMING.base * 2);
+  if (token !== runToken) return;
+  clearHighlights();
 }
 
 async function fillInterior(token) {
